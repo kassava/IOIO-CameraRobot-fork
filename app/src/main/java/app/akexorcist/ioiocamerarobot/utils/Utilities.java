@@ -11,9 +11,10 @@ import java.lang.reflect.Method;
  * Created by Akexorcist on 9/5/15 AD.
  */
 public class Utilities {
+
     public static String getCurrentIP(Context context) {
         WifiManager wifi = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        Method[] wmMethods = wifi.getClass().getDeclaredMethods();
+        Method[] wmMethods = wifi != null ? wifi.getClass().getDeclaredMethods() : new Method[0];
         for (Method method : wmMethods) {
             if (method.getName().equals("isWifiApEnabled")) {
 

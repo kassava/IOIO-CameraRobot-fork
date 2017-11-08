@@ -1,17 +1,18 @@
 package app.akexorcist.ioiocamerarobot.ioio;
 
-import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -21,23 +22,26 @@ import java.net.SocketTimeoutException;
 import app.akexorcist.ioiocamerarobot.constant.Command;
 
 public class IOIOService extends AsyncTask<Void, Void, Void> {
+
     private static final String TAG = "IOIOService";
     private static final int PORT = 21111;
+    private static final int TIMEOUT = 3000;
 
     private boolean isTaskRunning = true;
     private ServerSocket serverSocket;
     private Socket socket;
-    private String password;
+    private String ipAddress;
 
     private DataInputStream dataInputStream;
     private InputStream inputStream;
     private Handler handler;
 
-    public IOIOService(Handler handler, String password) {
+    public IOIOService(Handler handler, String ipAddress) {
         this.handler = handler;
-        this.password = password;
+        this.ipAddress = ipAddress;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     protected Void doInBackground(Void... params) {
         Runnable run = new Runnable() {
             public void run() {
@@ -52,7 +56,7 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
 
                     while (isTaskRunning) {
                         try {
-                            datagramSocket.setSoTimeout(3000);
+                            datagramSocket.setSoTimeout(TIMEOUT);
                             datagramSocket.receive(datagramPacket);
                             String text = new String(message, 0, datagramPacket.getLength());
                             String command = text.substring(0, 2);
@@ -98,17 +102,27 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
         new Thread(run).start();
 
         try {
-            serverSocket = new ServerSocket(21111);
-            serverSocket.setSoTimeout(2000);
-            Log.i(TAG, "Waiting for connect");
+//            serverSocket = new ServerSocket(PORT);
+//            serverSocket.setSoTimeout(TIMEOUT);
+//            Log.i(TAG, "Waiting for connect");
+//            while (socket == null && isTaskRunning) {
+//                try {
+//                    socket = serverSocket.accept();
+//                    socket.setSoTimeout(TIMEOUT);
+//                } catch (InterruptedIOException e) {
+//                    Log.i(TAG, "Waiting for connect");
+//                } catch (SocketException e) {
+//                   e.printStackTrace();
+//                }
+//            }
+
             while (socket == null && isTaskRunning) {
                 try {
-                    socket = serverSocket.accept();
-                    socket.setSoTimeout(2000);
-                } catch (InterruptedIOException e) {
-                    Log.i(TAG, "Waiting for connect");
-                } catch (SocketException e) {
-                   e.printStackTrace();
+                    socket = new Socket();
+                    socket.connect((new InetSocketAddress(InetAddress.getByName(ipAddress), PORT)), TIMEOUT);
+                } catch (Exception e) {
+                    handler.obtainMessage(Command.MESSAGE_STOP).sendToTarget();
+                    isTaskRunning = false;
                 }
             }
 
@@ -118,7 +132,7 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
                 int size = dataInputStream.readInt();
                 byte[] buffer = new byte[size];
                 dataInputStream.readFully(buffer);
-                if ((new String(buffer)).equalsIgnoreCase(password)) {
+                if ((new String(buffer)).equalsIgnoreCase(ipAddress)) {
                     handler.obtainMessage(Command.MESSAGE_PASS, socket).sendToTarget();
                 } else {
                     handler.obtainMessage(Command.MESSAGE_WRONG, socket).sendToTarget();

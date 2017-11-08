@@ -52,28 +52,8 @@
 				android:textSize="@dimen/connection_text_size" 
 	            android:singleLine="true"
 				android:inputType="text" />
-	
-	        <TextView
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:layout_marginTop="@dimen/edit_text_margin_top"
-	            android:text="@string/password"
-	            android:textColor="@color/green"
-	            android:textSize="@dimen/connection_text_size" />
-	
-	        <EditText
-	            android:id="@+id/et_password"
-	            android:layout_width="@dimen/edit_text_width"
-	            android:layout_height="@dimen/edit_text_height"
-	            android:background="@drawable/edittext_bg"
-	            android:gravity="center"
-	            android:maxLength="10"
-	            android:textColor="@color/light_green"
-	            android:textSize="@dimen/connection_text_size"
-	            android:singleLine="true"
-				android:inputType="textPassword" />
 
-	    </LinearLayout>
+		</LinearLayout>
 	    
 	    <Button
 	        android:id="@+id/btn_connect"

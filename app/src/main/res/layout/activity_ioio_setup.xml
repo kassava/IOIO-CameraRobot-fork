@@ -71,26 +71,25 @@
 			        android:progress="30"
 			        android:progressDrawable="@drawable/seekbar_progress"
 			        android:thumb="@null" />
-		
-			    <TextView
-			        android:layout_width="wrap_content"
-			        android:layout_height="wrap_content"
-			        android:layout_marginTop="@dimen/edit_text_margin_top"
-			        android:text="@string/password"
-			        android:textColor="@color/pink"
-			        android:textSize="@dimen/connection_text_size" />
+
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="@dimen/edit_text_margin_top"
+					android:text="@string/ip_address"
+					android:textColor="@color/pink"
+					android:textSize="@dimen/connection_text_size"/>
 
 			    <EditText
-			        android:id="@+id/et_password"
+			        android:id="@+id/et_ip"
 			        android:layout_width="@dimen/edit_text_width"
 			        android:layout_height="@dimen/edit_text_height"
 			        android:background="@drawable/edittext_bg"
 			        android:gravity="center_horizontal"
-			        android:maxLength="10"
+			        android:maxLength="15"
 			        android:textColor="@color/light_pink"
 			        android:textSize="@dimen/connection_text_size"
-	            	android:singleLine="true"
-					android:inputType="textPassword" />
+	            	android:singleLine="true"/>
 			</LinearLayout>
 		</LinearLayout>
 

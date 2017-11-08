@@ -2,7 +2,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@android:id/background"
-        android:drawable="@drawable/seekbar_bg" />
+        android:drawable="@drawable/seekbar_bg9" />
     <item android:id="@android:id/progress">
         <clip>
             <bitmap

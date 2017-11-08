@@ -188,8 +188,11 @@ public class CameraManager implements Camera.PictureCallback, Camera.PreviewCall
     }
 
     public interface CameraManagerListener {
+
         public void onPictureTaken(String filename, String path);
+
         public void onPreviewTaken(Bitmap bitmap);
+
         public void onPreviewOutOfMemory(OutOfMemoryError e);
     }
 

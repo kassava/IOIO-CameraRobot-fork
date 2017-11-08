@@ -9,6 +9,7 @@ import android.hardware.Camera;
 import android.hardware.Camera.Size;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.InputFilter;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -30,8 +31,9 @@ import app.akexorcist.ioiocamerarobot.R;
 import app.akexorcist.ioiocamerarobot.constant.ExtraKey;
 
 public class IOIOSetupActivity extends Activity implements OnClickListener, OnSeekBarChangeListener {
+
     private TextView tvImageQuality;
-    private EditText etPassword;
+    private EditText etIpAddress;
     private SeekBar sbImageQuality;
     private Button btnOk;
     private Button btnPreviewSizeChooser;
@@ -46,13 +48,14 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
 
         SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
         selectedSizePosition = settings.getInt(ExtraKey.PREVIEW_SIZE, 0);
-        String password = settings.getString(ExtraKey.OWN_PASSWORD, "");
+        String ipAddress = settings.getString(ExtraKey.OWN_IP_ADDRESS, "");
         int quality = settings.getInt(ExtraKey.QUALITY, 100);
 
         initCameraPreviewSize();
 
-        etPassword = (EditText) findViewById(R.id.et_password);
-        etPassword.setText(password);
+        etIpAddress = (EditText) findViewById(R.id.et_ip);
+        setInputFilterForEditText(etIpAddress);
+        etIpAddress.setText(ipAddress);
 
         btnPreviewSizeChooser = (Button) findViewById(R.id.btn_preview_size_chooser);
         updateSeletedPreviewSize();
@@ -102,8 +105,8 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
         tvImageQuality.setText(getString(R.string.image_quality, quality));
     }
 
-    public void savePassword(String password) {
-        getPreferenceEditor().putString(ExtraKey.OWN_PASSWORD, password).apply();
+    public void saveIpAddress(String ipAddress) {
+        getPreferenceEditor().putString(ExtraKey.OWN_IP_ADDRESS, ipAddress).apply();
     }
 
     public void saveImageQuality(int quality) {
@@ -121,7 +124,7 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
 
     public void goToIOIOController() {
         Intent intent = new Intent(this, IOIOControllerActivity.class);
-        intent.putExtra(ExtraKey.OWN_PASSWORD, etPassword.getText().toString());
+        intent.putExtra(ExtraKey.OWN_IP_ADDRESS, etIpAddress.getText().toString());
         intent.putExtra(ExtraKey.PREVIEW_SIZE, selectedSizePosition);
         intent.putExtra(ExtraKey.QUALITY, sbImageQuality.getProgress());
         startActivity(intent);
@@ -174,12 +177,41 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
     }
 
     public void confirmSetup() {
-        String strPassword = etPassword.getText().toString();
-        if (strPassword.length() != 0) {
-            savePassword(strPassword);
+        String strIpAddress = etIpAddress.getText().toString();
+        if (strIpAddress.length() != 0) {
+            saveIpAddress(strIpAddress);
             goToIOIOController();
         } else {
             showToast(getString(R.string.password_is_required));
         }
+    }
+
+    private void setInputFilterForEditText(EditText editText) {
+        InputFilter[] filters = new InputFilter[1];
+        filters[0] = new InputFilter() {
+            @Override
+            public CharSequence filter(CharSequence source, int start, int end,
+                                       android.text.Spanned dest, int dstart, int dend) {
+                if (end > start) {
+                    String destTxt = dest.toString();
+                    String resultingTxt = destTxt.substring(0, dstart)
+                            + source.subSequence(start, end)
+                            + destTxt.substring(dend);
+                    if (!resultingTxt
+                            .matches("^\\d{1,3}(\\.(\\d{1,3}(\\.(\\d{1,3}(\\.(\\d{1,3})?)?)?)?)?)?")) {
+                        return "";
+                    } else {
+                        String[] splits = resultingTxt.split("\\.");
+                        for (String split : splits) {
+                            if (Integer.valueOf(split) > 255) {
+                                return "";
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+        };
+        editText.setFilters(filters);
     }
 }

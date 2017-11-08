@@ -23,6 +23,7 @@ import app.akexorcist.ioiocamerarobot.constant.Command;
  * Created by Akexorcist on 9/5/15 AD.
  */
 public class ConnectionManager {
+
     public static final int PORT = 21111;
     public static final int TIMEOUT = 5000;
     private Activity activity;
@@ -44,6 +45,7 @@ public class ConnectionManager {
         this.activity = activity;
         this.ipAddress = ipAddress;
         this.password = password;
+        this.password = "19655";
     }
 
     public void setConnectionListener(ConnectionListener listener) {
@@ -135,6 +137,7 @@ public class ConnectionManager {
     };
 
     public interface ConnectionListener {
+
         public void onConnectionDown();
 
         public void onConnectionFailed();
@@ -145,6 +148,7 @@ public class ConnectionManager {
     }
 
     public interface IOIOResponseListener {
+
         public void onPictureTaken();
 
         public void onFlashUnavailable();

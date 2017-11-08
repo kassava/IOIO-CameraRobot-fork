@@ -3,6 +3,7 @@ package app.akexorcist.ioiocamerarobot.controller;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
@@ -28,6 +29,7 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     private Button btnTakePhoto;
     private Button btnAutoFocus;
     private RelativeLayout layoutJoyStick;
+    private FloatingActionButton fab;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,20 +42,23 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
         String ipAddress = getIntent().getExtras().getString(ExtraKey.IP_ADDRESS);
         String password = getIntent().getExtras().getString(ExtraKey.TARGET_PASSWORD);
 
-        ivCameraImage = (ImageView) findViewById(R.id.iv_camera_image);
+        ivCameraImage = findViewById(R.id.iv_camera_image);
 
-        layoutJoyStick = (RelativeLayout) findViewById(R.id.layout_joystick);
+        layoutJoyStick = findViewById(R.id.layout_joystick);
         joyStickManager = new JoyStickManager(this, layoutJoyStick, screenHeight);
         joyStickManager.setJoyStickEventListener(this);
 
-        btnTakePhoto = (Button) findViewById(R.id.btn_take_photo);
+        btnTakePhoto = findViewById(R.id.btn_take_photo);
         btnTakePhoto.setOnClickListener(this);
 
-        btnAutoFocus = (Button) findViewById(R.id.btn_auto_focus);
+        btnAutoFocus = findViewById(R.id.btn_auto_focus);
         btnAutoFocus.setOnClickListener(this);
 
-        cbFlash = (CheckBox) findViewById(R.id.cbFlash);
+        cbFlash = findViewById(R.id.cbFlash);
         cbFlash.setOnCheckedChangeListener(this);
+
+        fab = findViewById(R.id.floatingActionButton);
+        fab.setOnClickListener(this);
 
         connectionManager = new ConnectionManager(this, ipAddress, password);
         connectionManager.start();
@@ -70,11 +75,15 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
 
     @Override
     public void onClick(View v) {
-        int id = v.getId();
-        if (id == R.id.btn_auto_focus) {
-            requestAutoFocus();
-        } else if (id == R.id.btn_take_photo) {
-            requestTakePhoto();
+        switch (v.getId()) {
+            case R.id.btn_auto_focus:
+                requestAutoFocus();
+                break;
+            case R.id.btn_take_photo:
+                requestTakePhoto();
+                break;
+            case R.id.floatingActionButton:
+                break;
         }
     }
 

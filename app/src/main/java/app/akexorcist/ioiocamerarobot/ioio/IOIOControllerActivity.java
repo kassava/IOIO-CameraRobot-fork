@@ -31,6 +31,7 @@ import android.widget.Toast;
 
 
 public class IOIOControllerActivity extends IOIOActivity implements CameraManager.CameraManagerListener, Callback, ConnectionManager.ConnectionListener, ConnectionManager.ControllerCommandListener, ConnectionManager.SendCommandListener {
+    
     private static final int TAKE_PICTURE_COOLDOWN = 1000;
     private RelativeLayout layoutParent;
     private TextView tvMovementSpeed;
@@ -62,7 +63,7 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_ioio);
 
-        String password = getIntent().getExtras().getString(ExtraKey.OWN_PASSWORD);
+        String ipAddress = getIntent().getExtras().getString(ExtraKey.OWN_IP_ADDRESS);
         int selectedPreviewSize = getIntent().getExtras().getInt(ExtraKey.PREVIEW_SIZE);
         imageQuality = getIntent().getExtras().getInt(ExtraKey.QUALITY);
 
@@ -91,7 +92,7 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
                 cameraManager.requestAutoFocus();
             }
         });
-        connectionManager = new ConnectionManager(password);
+        connectionManager = new ConnectionManager(ipAddress);
         connectionManager.start();
         connectionManager.setConnectionListener(this);
         connectionManager.setCommandListener(this);
