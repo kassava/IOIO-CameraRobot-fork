@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                                              xmlns:app="http://schemas.android.com/apk/res-auto"
-                                             xmlns:tools="http://schemas.android.com/tools"
+                                             xmlns:fab="http://schemas.android.com/apk/res-auto"
                                              android:id="@+id/relativeLayout2"
                                              android:layout_width="match_parent"
                                              android:layout_height="match_parent"
@@ -17,29 +17,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
-
-
-    <Button
-        android:id="@+id/btn_auto_focus"
-        android:layout_width="@dimen/command_button_size"
-        android:layout_height="@dimen/command_button_size"
-        android:layout_marginEnd="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/button_focus"
-        app:layout_constraintEnd_toStartOf="@+id/btn_take_photo"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginRight="8dp"/>
-
-    <Button
-        android:id="@+id/btn_take_photo"
-        android:layout_width="@dimen/command_button_size"
-        android:layout_height="@dimen/command_button_size"
-        android:layout_marginEnd="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/button_snap"
-        app:layout_constraintEnd_toStartOf="@+id/cbFlash"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginRight="8dp"/>
 
     <CheckBox
         android:id="@+id/cbFlash"
@@ -69,18 +46,48 @@
         >
     </RelativeLayout>
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/floatingActionButton"
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/floatingActionMenu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|right"
         android:layout_marginBottom="16dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
-        android:clickable="true"
-        android:focusable="true"
-        app:backgroundTint="@android:color/holo_orange_light"
+        android:src="@drawable/fab_add"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:rippleColor="@android:color/black"
-        app:srcCompat="@drawable/ic_action_name"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        fab:fab_colorNormal="@color/light_pink"
+        fab:fab_colorPressed="@color/pink"
+        fab:fab_colorRipple="@color/white"
+        fab:menu_animationDelayPerItem="0"
+        fab:menu_labels_hideAnimation="@anim/jump_to_down"
+        fab:menu_labels_showAnimation="@anim/jump_from_down">
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_auto_focus"
+            style="@style/MenuButtonsStyle"
+            android:layout_width="@dimen/fab_size_mini"
+            android:layout_height="@dimen/fab_size_mini"
+            android:src="@drawable/ic_action_name"
+            fab:fab_label="Autofocus"/>
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_quality"
+            style="@style/MenuButtonsStyle"
+            android:layout_width="@dimen/fab_size_mini"
+            android:layout_height="@dimen/fab_size_mini"
+            android:src="@drawable/ic_action_name"
+            fab:fab_label="Quality"/>
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_take_photo"
+            style="@style/MenuButtonsStyle"
+            android:layout_width="@dimen/fab_size_mini"
+            android:layout_height="@dimen/fab_size_mini"
+            android:src="@drawable/ic_action_name"
+            fab:fab_label="Take photo"/>
+
+    </com.github.clans.fab.FloatingActionMenu>
 
 </android.support.constraint.ConstraintLayout>

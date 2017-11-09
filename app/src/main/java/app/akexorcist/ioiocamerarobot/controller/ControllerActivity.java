@@ -1,19 +1,21 @@
 package app.akexorcist.ioiocamerarobot.controller;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+
+import com.github.clans.fab.FloatingActionButton;
 
 import app.akexorcist.ioiocamerarobot.R;
 import app.akexorcist.ioiocamerarobot.constant.Command;
@@ -26,8 +28,9 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     private ConnectionManager connectionManager;
     private JoyStickManager joyStickManager;
 
-    private Button btnTakePhoto;
-    private Button btnAutoFocus;
+    private FloatingActionButton fabTakePhoto;
+    private FloatingActionButton fabAutoFocus;
+    private FloatingActionButton fabQuality;
     private RelativeLayout layoutJoyStick;
     private FloatingActionButton fab;
 
@@ -48,17 +51,20 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
         joyStickManager = new JoyStickManager(this, layoutJoyStick, screenHeight);
         joyStickManager.setJoyStickEventListener(this);
 
-        btnTakePhoto = findViewById(R.id.btn_take_photo);
-        btnTakePhoto.setOnClickListener(this);
+        fabTakePhoto = findViewById(R.id.fab_take_photo);
+        fabTakePhoto.setOnClickListener(this);
 
-        btnAutoFocus = findViewById(R.id.btn_auto_focus);
-        btnAutoFocus.setOnClickListener(this);
+        fabAutoFocus = findViewById(R.id.fab_auto_focus);
+        fabAutoFocus.setOnClickListener(this);
+
+        fabQuality = findViewById(R.id.fab_quality);
+        fabQuality.setOnClickListener(this);
 
         cbFlash = findViewById(R.id.cbFlash);
         cbFlash.setOnCheckedChangeListener(this);
 
-        fab = findViewById(R.id.floatingActionButton);
-        fab.setOnClickListener(this);
+//        fab = findViewById(R.id.floatingActionButton);
+//        fab.setOnClickListener(this);
 
         connectionManager = new ConnectionManager(this, ipAddress, password);
         connectionManager.start();
@@ -70,19 +76,20 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     public void onStop() {
         super.onStop();
         connectionManager.stop();
-        finish();
+//        finish();
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.btn_auto_focus:
+            case R.id.fab_auto_focus:
                 requestAutoFocus();
                 break;
-            case R.id.btn_take_photo:
+            case R.id.fab_take_photo:
                 requestTakePhoto();
                 break;
-            case R.id.floatingActionButton:
+            case R.id.fab_quality:
+                changeQuality();
                 break;
         }
     }
@@ -93,6 +100,20 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
 
     public void requestTakePhoto() {
         connectionManager.sendCommand(Command.SNAP);
+    }
+
+    public void changeQuality() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.default_ip_address)
+                .setTitle(R.string.app_name)
+                .setNeutralButton("ОК, иду на кухню",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                            }
+                        });
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     @Override
@@ -128,7 +149,7 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     @Override
     public void onConnectionFailed() {
         showToast(getString(R.string.connection_failed));
-        finish();
+//        finish();
     }
 
     @Override

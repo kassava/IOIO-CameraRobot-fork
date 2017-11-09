@@ -22,5 +22,6 @@
     <string name="wrong_password">Wrong Password</string>
     <string name="photo_taken">Photo Taken.</string>
     <string name="connection_accepted">Connection accepted</string>
+    <string name="quality">Quality</string>
 
 </resources>
