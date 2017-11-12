@@ -19,7 +19,6 @@ public class ControllerSetupActivity extends Activity implements OnClickListener
 
     private static final String DEFAULT_IP_ADDRESS = "192.168.1.1";
     private EditText etIpAddress;
-    //    private EditText etIp;
     private Button btnConnect;
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,11 +30,6 @@ public class ControllerSetupActivity extends Activity implements OnClickListener
         etIpAddress = (EditText) findViewById(R.id.et_ip_address);
         setInputFilterForEditText(etIpAddress);
         etIpAddress.setText(settings.getString(ExtraKey.IP_ADDRESS, DEFAULT_IP_ADDRESS));
-
-//        etIp = (EditText) findViewById(R.id.et_ip);
-
-//        setInputFilterForEditText(etIp);
-//        etIp.setText(settings.getString(ExtraKey.TARGET_PASSWORD, ""));
 
         btnConnect = (Button) findViewById(R.id.btn_connect);
         btnConnect.setOnClickListener(this);
@@ -80,8 +74,7 @@ public class ControllerSetupActivity extends Activity implements OnClickListener
 
     @Override
     public void onClick(View v) {
-        int id = v.getId();
-        if (id == R.id.btn_connect) {
+        if (v.getId() == R.id.btn_connect) {
             goToController();
         }
     }

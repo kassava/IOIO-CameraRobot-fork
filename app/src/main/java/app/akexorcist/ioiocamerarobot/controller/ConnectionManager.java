@@ -76,9 +76,41 @@ public class ConnectionManager {
                 dataInputStream = new DataInputStream(inputStream);
                 sendCommand(password);
 
+                int size = dataInputStream.readInt();
+                byte[] buf = new byte[size];
+                dataInputStream.readFully(buf);
+
+                final String sourceIpListStr = new String(buf);
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        connectionListener.onSourcesIpList(sourceIpListStr);
+                    }
+                });
+
+                size = dataInputStream.readInt();
+                buf = new byte[size];
+                dataInputStream.readFully(buf);
+                String acceptStr = new String(buf);
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        connectionListener.onIOIOConnected();
+                    }
+                });
+                size = dataInputStream.readInt();
+                buf = new byte[size];
+                dataInputStream.readFully(buf);
+                String qualityStr = new String(buf);
+                size = dataInputStream.readInt();
+                buf = new byte[size];
+                dataInputStream.readFully(buf);
+                String sizes = new String(buf);
+                responseListener.onPreviewSizesResponse(sizes);
+
                 while (isTaskRunning) {
                     try {
-                        int size = dataInputStream.readInt();
+                        size = dataInputStream.readInt();
                         final byte[] buffer = new byte[size];
                         dataInputStream.readFully(buffer);
 
@@ -145,6 +177,8 @@ public class ConnectionManager {
         public void onWrongPassword();
 
         public void onIOIOConnected();
+
+        public void onSourcesIpList(String ipListStr);
     }
 
     public interface IOIOResponseListener {
@@ -154,6 +188,8 @@ public class ConnectionManager {
         public void onFlashUnavailable();
 
         public void onCameraImageIncoming(Bitmap bitmap);
+
+        public void onPreviewSizesResponse(String previewSizesStr);
     }
 
     public void stop() {
@@ -167,16 +203,14 @@ public class ConnectionManager {
         }
     }
 
-    public boolean sendCommand(String str) {
+    public void sendCommand(String str) {
         try {
             dataOutputStream.writeInt(str.length());
             dataOutputStream.write(str.getBytes());
             outputStream.flush();
-            return true;
         } catch (IOException | NullPointerException e) {
             e.printStackTrace();
         }
-        return false;
     }
 
     public void sendMovement(final String str) {

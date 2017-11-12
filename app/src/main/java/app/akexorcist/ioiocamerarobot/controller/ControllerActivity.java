@@ -1,38 +1,62 @@
 package app.akexorcist.ioiocamerarobot.controller;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.util.ArrayList;
 
 import app.akexorcist.ioiocamerarobot.R;
 import app.akexorcist.ioiocamerarobot.constant.Command;
 import app.akexorcist.ioiocamerarobot.constant.ExtraKey;
 
-public class ControllerActivity extends Activity implements ConnectionManager.IOIOResponseListener, ConnectionManager.ConnectionListener, OnClickListener, OnCheckedChangeListener, JoyStickManager.JoyStickEventListener {
+public class ControllerActivity extends Activity implements ConnectionManager.IOIOResponseListener,
+        ConnectionManager.ConnectionListener, OnClickListener, OnCheckedChangeListener, SeekBar.OnSeekBarChangeListener,
+        JoyStickManager.JoyStickEventListener {
+
     private ImageView ivCameraImage;
     private CheckBox cbFlash;
 
     private ConnectionManager connectionManager;
+    private ArrayList<String> previewSizeList;
+    private int selectedSizePosition;
     private JoyStickManager joyStickManager;
 
     private FloatingActionButton fabTakePhoto;
     private FloatingActionButton fabAutoFocus;
     private FloatingActionButton fabQuality;
     private RelativeLayout layoutJoyStick;
-    private FloatingActionButton fab;
+
+    private Button btnPreviewSizeChooser;
+    private TextView textView;
+    private SeekBar sbImageQuality;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,7 +67,7 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
         int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
 
         String ipAddress = getIntent().getExtras().getString(ExtraKey.IP_ADDRESS);
-        String password = getIntent().getExtras().getString(ExtraKey.TARGET_PASSWORD);
+        String password = "19655";
 
         ivCameraImage = findViewById(R.id.iv_camera_image);
 
@@ -62,9 +86,6 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
 
         cbFlash = findViewById(R.id.cbFlash);
         cbFlash.setOnCheckedChangeListener(this);
-
-//        fab = findViewById(R.id.floatingActionButton);
-//        fab.setOnClickListener(this);
 
         connectionManager = new ConnectionManager(this, ipAddress, password);
         connectionManager.start();
@@ -91,7 +112,44 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
             case R.id.fab_quality:
                 changeQuality();
                 break;
+            case R.id.btn_preview_size:
+                createPreviewSizeChooserDialog();
+                break;
         }
+    }
+
+    public void createPreviewSizeChooserDialog() {
+        final Dialog dialogSize = new Dialog(this);
+        dialogSize.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialogSize.setContentView(R.layout.dialog_camera_size);
+        dialogSize.setCancelable(true);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.view_simple_textview, previewSizeList);
+        ListView lvAvailablePreviewSize = dialogSize.findViewById(R.id.lv_available_preview_size);
+        lvAvailablePreviewSize.setAdapter(adapter);
+        lvAvailablePreviewSize.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                selectedSizePosition = position;
+                saveImagePreviewSize(position);
+                updateSeletedPreviewSize();
+                dialogSize.cancel();
+            }
+        });
+        dialogSize.show();
+    }
+
+    public void saveImagePreviewSize(int size) {
+        getPreferenceEditor().putInt(ExtraKey.PREVIEW_SIZE, size).apply();
+    }
+
+    public SharedPreferences.Editor getPreferenceEditor() {
+        SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
+        return settings.edit();
+    }
+
+    public void updateSeletedPreviewSize() {
+        String strSize = previewSizeList.get(selectedSizePosition);
+        btnPreviewSizeChooser.setText(strSize);
     }
 
     public void requestAutoFocus() {
@@ -103,12 +161,30 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     }
 
     public void changeQuality() {
+        ConstraintLayout view = (ConstraintLayout) getLayoutInflater().inflate(R.layout.dialog_image_quality, null);
+        btnPreviewSizeChooser = view.findViewById(R.id.btn_preview_size);
+        btnPreviewSizeChooser.setOnClickListener(this);
+        textView = view.findViewById(R.id.tv_im_quality);
+        SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
+        int quality = settings.getInt(ExtraKey.QUALITY, 100);
+        textView.setText(getString(R.string.image_quality, quality));
+        sbImageQuality = view.findViewById(R.id.sb_im_quality);
+        sbImageQuality.setProgress(quality);
+        sbImageQuality.setOnSeekBarChangeListener(this);
+        String strSize = previewSizeList.get(selectedSizePosition);
+        btnPreviewSizeChooser.setText(strSize);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(R.string.default_ip_address)
-                .setTitle(R.string.app_name)
-                .setNeutralButton("ОК, иду на кухню",
+        builder.setView(view)
+                .setTitle(R.string.quality_selection)
+                .setPositiveButton("Добро",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
+                                JSONArray jsonArray = new JSONArray();
+                                jsonArray.put(selectedSizePosition);
+                                jsonArray.put(sbImageQuality.getProgress());
+                                String command = Command.QUALITY + ":"
+                                        + jsonArray.toString();
+                                connectionManager.sendCommand(command);
                                 dialog.dismiss();
                             }
                         });
@@ -141,6 +217,20 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     }
 
     @Override
+    public void onPreviewSizesResponse(String previewSizesStr) {
+        try {
+            JSONArray jsonArray = new JSONArray(previewSizesStr);
+            previewSizeList = new ArrayList<>();
+            int len = jsonArray.length();
+            for (int i = 0; i < len; i++){
+                previewSizeList.add(jsonArray.get(i).toString());
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void onConnectionDown() {
         showToast(getString(R.string.connection_down));
         finish();
@@ -161,6 +251,26 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     @Override
     public void onIOIOConnected() {
         showToast(getString(R.string.connection_accepted));
+    }
+
+    @Override
+    public void onSourcesIpList(String ipListStr) {
+        final Dialog ipListDialog = new Dialog(this);
+        ipListDialog.setTitle("Выберите ip источника");
+        ipListDialog.setContentView(R.layout.dialog_camera_size);
+        ipListDialog.setCancelable(true);
+
+        final ArrayList<String> ipList = new ArrayList<>();
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.view_simple_textview, ipList);
+        ListView lvAvailablePreviewSize = ipListDialog.findViewById(R.id.lv_available_preview_size);
+        lvAvailablePreviewSize.setAdapter(adapter);
+        lvAvailablePreviewSize.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                connectionManager.sendCommand(ipList.get(position));
+                ipListDialog.cancel();
+            }
+        });
+        ipListDialog.show();
     }
 
     public void showToast(String message) {
@@ -211,5 +321,29 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     public void onJoyStickNone() {
         connectionManager.sendMovement(Command.STOP);
         connectionManager.sendMovement(Command.STOP);
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+            saveImageQuality(i);
+            updateTextViewQuality(i);
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    public void saveImageQuality(int quality) {
+        getPreferenceEditor().putInt(ExtraKey.QUALITY, quality).apply();
+    }
+
+    public void updateTextViewQuality(int quality) {
+        textView.setText(getString(R.string.image_quality, quality));
     }
 }

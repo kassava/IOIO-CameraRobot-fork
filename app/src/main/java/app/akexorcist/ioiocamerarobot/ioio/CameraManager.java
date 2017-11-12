@@ -25,6 +25,7 @@ public class CameraManager implements Camera.PictureCallback, Camera.PreviewCall
     private Camera.Size previewSize;
 
     private int selectedPreviewSize;
+    public String previewSizeStr;
     int w, h;
     int[] rgbs;
     boolean initialed = false;
@@ -126,6 +127,7 @@ public class CameraManager implements Camera.PictureCallback, Camera.PreviewCall
         params = mCamera.getParameters();
         pictureSize = getMaxPictureSize(params);
         previewSize = params.getSupportedPreviewSizes().get(selectedPreviewSize);
+        previewSizeStr = previewSize.width + " x " + previewSize.height;
 
         params.setPictureSize(pictureSize.width, pictureSize.height);
         params.setPreviewSize(previewSize.width, previewSize.height);

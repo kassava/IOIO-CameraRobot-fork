@@ -5,8 +5,8 @@
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
     <string name="password">Password</string>
-    <string name="image_resolution">Image Resolution</string>
-    <string name="image_quality">Image Quality %1$s %%</string>
+    <string name="image_resolution">Разрешение изображения</string>
+    <string name="image_quality">Качество изображения %1$s %%</string>
     <string name="movement_speed">Speed %1$s</string>
     <string name="password_is_required">Password is required.</string>
     <string name="unavailable_flash_mode">Unavailable Flash Mode.</string>
@@ -23,5 +23,8 @@
     <string name="photo_taken">Photo Taken.</string>
     <string name="connection_accepted">Connection accepted</string>
     <string name="quality">Quality</string>
+    <string name="speed_0">Speed 0</string>
+    <string name="default_quality">1280 X 720, 81 %</string>
+    <string name="quality_selection">Выбор качества</string>
 
 </resources>

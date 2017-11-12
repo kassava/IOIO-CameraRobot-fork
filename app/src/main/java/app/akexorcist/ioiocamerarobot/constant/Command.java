@@ -11,6 +11,7 @@ public class Command {
     public static final String FLASH_UNAVAILABLE = "NoFlash";
     public static final String SNAP = "SNAP";
     public static final String FOCUS = "FOCUS";
+    public static final String QUALITY = "QY"; // quality
 
     // Unique command for IOIO Service
     public static final int MESSAGE_UPDATE = 0;
@@ -21,6 +22,7 @@ public class Command {
     public static final int MESSAGE_DISCONNECTED = 5;
     public static final int MESSAGE_FLASH = 6;
     public static final int MESSAGE_SNAP = 7;
+    public static final int MESSAGE_QUALITY = 9;
     public static final int MESSAGE_FOCUS = 8;
     public static final int MESSAGE_STOP = 10;
     public static final int MESSAGE_UP = 11;

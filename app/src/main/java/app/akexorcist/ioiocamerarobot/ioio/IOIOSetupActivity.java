@@ -1,5 +1,6 @@
 package app.akexorcist.ioiocamerarobot.ioio;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -23,6 +24,8 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONArray;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,22 +56,22 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
 
         initCameraPreviewSize();
 
-        etIpAddress = (EditText) findViewById(R.id.et_ip);
+        etIpAddress = findViewById(R.id.et_ip);
         setInputFilterForEditText(etIpAddress);
         etIpAddress.setText(ipAddress);
 
-        btnPreviewSizeChooser = (Button) findViewById(R.id.btn_preview_size_chooser);
+        btnPreviewSizeChooser = findViewById(R.id.btn_preview_size_chooser);
         updateSeletedPreviewSize();
         btnPreviewSizeChooser.setOnClickListener(this);
 
-        tvImageQuality = (TextView) findViewById(R.id.tv_image_quality);
+        tvImageQuality = findViewById(R.id.tv_image_quality);
         updateTextViewQuality(quality);
 
-        sbImageQuality = (SeekBar) findViewById(R.id.sb_image_quality);
+        sbImageQuality = findViewById(R.id.sb_image_quality);
         sbImageQuality.setProgress(quality);
         sbImageQuality.setOnSeekBarChangeListener(this);
 
-        btnOk = (Button) findViewById(R.id.btn_ok);
+        btnOk = findViewById(R.id.btn_ok);
         btnOk.setOnClickListener(this);
     }
 
@@ -101,6 +104,7 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
         btnPreviewSizeChooser.setText(strSize);
     }
 
+    @SuppressLint("StringFormatMatches")
     public void updateTextViewQuality(int quality) {
         tvImageQuality.setText(getString(R.string.image_quality, quality));
     }
@@ -150,6 +154,8 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
             String str = previewSize.get(i).width + " x " + previewSize.get(i).height;
             previewSizeList.add(str);
         }
+        JSONArray jsonArray = new JSONArray(previewSizeList);
+        getPreferenceEditor().putString(ExtraKey.PREVIEW_SIZE_SET, jsonArray.toString()).apply();
     }
 
     public void createPreviewSizeChooserDialog() {
@@ -159,7 +165,7 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
         dialogSize.setCancelable(true);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.view_simple_textview, previewSizeList);
-        ListView lvAvailablePreviewSize = (ListView) dialogSize.findViewById(R.id.lv_available_preview_size);
+        ListView lvAvailablePreviewSize = dialogSize.findViewById(R.id.lv_available_preview_size);
         lvAvailablePreviewSize.setAdapter(adapter);
         lvAvailablePreviewSize.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {

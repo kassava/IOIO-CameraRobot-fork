@@ -1,33 +1,39 @@
 package app.akexorcist.ioiocamerarobot.ioio;
 
-import app.akexorcist.ioiocamerarobot.utils.Utilities;
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.view.Display;
+import android.view.SurfaceHolder;
+import android.view.SurfaceHolder.Callback;
+import android.view.SurfaceView;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup.LayoutParams;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.io.ByteArrayOutputStream;
+
+import app.akexorcist.ioiocamerarobot.R;
 import app.akexorcist.ioiocamerarobot.constant.Command;
 import app.akexorcist.ioiocamerarobot.constant.DirectionState;
 import app.akexorcist.ioiocamerarobot.constant.ExtraKey;
-import app.akexorcist.ioiocamerarobot.R;
+import app.akexorcist.ioiocamerarobot.utils.Utilities;
 import ioio.lib.api.DigitalOutput;
 import ioio.lib.api.PwmOutput;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.BaseIOIOLooper;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
-
-import java.io.ByteArrayOutputStream;
-
-import android.graphics.Bitmap;
-import android.os.Bundle;
-import android.view.SurfaceHolder;
-import android.view.SurfaceHolder.Callback;
-import android.view.View.OnClickListener;
-import android.view.ViewGroup.LayoutParams;
-import android.view.Display;
-import android.view.SurfaceView;
-import android.view.View;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
-import android.widget.Toast;
 
 
 public class IOIOControllerActivity extends IOIOActivity implements CameraManager.CameraManagerListener, Callback, ConnectionManager.ConnectionListener, ConnectionManager.ControllerCommandListener, ConnectionManager.SendCommandListener {
@@ -64,29 +70,30 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
         setContentView(R.layout.activity_ioio);
 
         String ipAddress = getIntent().getExtras().getString(ExtraKey.OWN_IP_ADDRESS);
+        ipAddress = "19655";
         int selectedPreviewSize = getIntent().getExtras().getInt(ExtraKey.PREVIEW_SIZE);
         imageQuality = getIntent().getExtras().getInt(ExtraKey.QUALITY);
 
-        btnMoveForward = (Button) findViewById(R.id.btn_move_forward);
-        btnMoveForwardLeft = (Button) findViewById(R.id.btn_move_forward_left);
-        btnMoveForwardRight = (Button) findViewById(R.id.btn_move_forward_right);
-        btnMoveDown = (Button) findViewById(R.id.btn_move_backward);
-        btnMoveDownLeft = (Button) findViewById(R.id.btn_move_backward_left);
-        btnMoveDownRight = (Button) findViewById(R.id.btn_move_backward_right);
-        btnMoveRight = (Button) findViewById(R.id.btn_move_right);
-        btnMoveLeft = (Button) findViewById(R.id.btn_move_left);
+        btnMoveForward = findViewById(R.id.btn_move_forward);
+        btnMoveForwardLeft = findViewById(R.id.btn_move_forward_left);
+        btnMoveForwardRight = findViewById(R.id.btn_move_forward_right);
+        btnMoveDown = findViewById(R.id.btn_move_backward);
+        btnMoveDownLeft = findViewById(R.id.btn_move_backward_left);
+        btnMoveDownRight = findViewById(R.id.btn_move_backward_right);
+        btnMoveRight = findViewById(R.id.btn_move_right);
+        btnMoveLeft = findViewById(R.id.btn_move_left);
 
-        tvMovementSpeed = (TextView) findViewById(R.id.tv_movement_speed);
+        tvMovementSpeed = findViewById(R.id.tv_movement_speed);
 
-        tvIpAddress = (TextView) findViewById(R.id.tv_ip_address);
+        tvIpAddress = findViewById(R.id.tv_ip_address);
         tvIpAddress.setText(Utilities.getCurrentIP(this));
 
-        surfacePreview = (SurfaceView) findViewById(R.id.surface_preview);
+        surfacePreview = findViewById(R.id.surface_preview);
         surfacePreview.getHolder().addCallback(this);
         surfacePreview.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
 
-        layoutParent = (RelativeLayout) findViewById(R.id.layout_parent);
+        layoutParent = findViewById(R.id.layout_parent);
         layoutParent.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 cameraManager.requestAutoFocus();
@@ -120,6 +127,7 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
         btnMoveLeft.setPressed(false);
     }
 
+    @SuppressLint("StringFormatMatches")
     public void updateMovementSpeed(int speed) {
         movementSpeed = speed;
         tvMovementSpeed.setText(getString(R.string.movement_speed, speed));
@@ -131,9 +139,28 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
     }
 
     @Override
+    public void onChangeQuality(String string) {
+        String subStr = string.substring(Command.QUALITY.length() + 1);
+        try {
+            JSONArray jsonArray = new JSONArray(subStr);
+            imageQuality = jsonArray.getInt(1);
+            restartPreview(jsonArray.getInt(0));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void onQualityRequest() {
+        SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
+        String previewSizesList = settings.getString(ExtraKey.PREVIEW_SIZE_SET, "");
+        connectionManager.sendPreviewSizes(previewSizesList);
+    }
+
+    @Override
     public void onControllerConnected() {
         isConnected = true;
         connectionManager.sendCommand(Command.ACCEPT_CONNECTION);
+        onQualityRequest();
     }
 
     @Override
@@ -300,6 +327,23 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
 
     public void surfaceDestroyed(SurfaceHolder holder) {
         cameraManager.destroyCameraInstance();
+    }
+
+    public void restartPreview(int newPreviewSize) {
+        if (surfacePreview == null)
+            return;
+
+        cameraManager.stopCameraPreview();
+        surfaceDestroyed(surfacePreview.getHolder());
+        cameraManager = new CameraManager(newPreviewSize);
+        surfaceCreated(surfacePreview.getHolder());
+        cameraManager.setCameraManagerListener(this);
+        cameraManager.initCameraParameter();
+
+        setupPreviewLayout();
+
+        cameraManager.setCameraOrientation(orientationManager.getOrientation());
+        cameraManager.startCameraPreview(surfacePreview);
     }
 
     @Override

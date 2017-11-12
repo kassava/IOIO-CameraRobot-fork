@@ -47,39 +47,58 @@ public class ConnectionManager {
     Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
             onDataIncoming();
-            int messageType = msg.what;
-            if (messageType == Command.MESSAGE_PASS) {
-                onControllerConnected((Socket) msg.obj);
-            } else if (messageType == Command.MESSAGE_WRONG) {
-                onControllerPasswordWrong((Socket) msg.obj);
-            } else if (messageType == Command.MESSAGE_DISCONNECTED) {
-                onControllerDisconnected();
-            } else if (messageType == Command.MESSAGE_CLOSE) {
-                onControllerClosed();
-            } else if (messageType == Command.MESSAGE_FLASH) {
-                onFlashCommand(msg.obj.toString());
-            } else if (messageType == Command.MESSAGE_SNAP) {
-                onRequestTakePicture();
-            } else if (messageType == Command.MESSAGE_FOCUS) {
-                onRequestAutoFocus();
-            } else if (messageType == Command.MESSAGE_UP) {
-                onMoveForwardCommand((Integer) msg.obj);
-            } else if (messageType == Command.MESSAGE_UPRIGHT) {
-                onMoveForwardRightCommand((Integer) msg.obj);
-            } else if (messageType == Command.MESSAGE_UPLEFT) {
-                onMoveForwardLeftCommand((Integer) msg.obj);
-            } else if (messageType == Command.MESSAGE_DOWN) {
-                onMoveBackwardCommand((Integer) msg.obj);
-            } else if (messageType == Command.MESSAGE_DOWNRIGHT) {
-                onMoveBackwardRightCommand((Integer) msg.obj);
-            } else if (messageType == Command.MESSAGE_DOWNLEFT) {
-                onMoveBackwardLeftCommand((Integer) msg.obj);
-            } else if (messageType == Command.MESSAGE_RIGHT) {
-                onMoveRightCommand((Integer) msg.obj);
-            } else if (messageType == Command.MESSAGE_LEFT) {
-                onMoveLeftCommand((Integer) msg.obj);
-            } else if (messageType == Command.MESSAGE_STOP) {
-                onMoveStopCommand();
+            switch (msg.what) {
+                case Command.MESSAGE_PASS:
+                    onControllerConnected((Socket) msg.obj);
+                    break;
+                case Command.MESSAGE_WRONG:
+                    onControllerPasswordWrong((Socket) msg.obj);
+                    break;
+                case Command.MESSAGE_DISCONNECTED:
+                    onControllerDisconnected();
+                    break;
+                case Command.MESSAGE_CLOSE:
+                    onControllerClosed();
+                    break;
+                case Command.MESSAGE_FLASH:
+                    onFlashCommand(msg.obj.toString());
+                    break;
+                case Command.MESSAGE_SNAP:
+                    onRequestTakePicture();
+                    break;
+                case Command.MESSAGE_FOCUS:
+                    onRequestAutoFocus();
+                    break;
+                case Command.MESSAGE_UP:
+                    onMoveForwardCommand((Integer) msg.obj);
+                    break;
+                case Command.MESSAGE_UPRIGHT:
+                    onMoveForwardRightCommand((Integer) msg.obj);
+                    break;
+                case Command.MESSAGE_UPLEFT:
+                    onMoveForwardLeftCommand((Integer) msg.obj);
+                    break;
+                case Command.MESSAGE_DOWN:
+                    onMoveBackwardCommand((Integer) msg.obj);
+                    break;
+                case Command.MESSAGE_DOWNRIGHT:
+                    onMoveBackwardRightCommand((Integer) msg.obj);
+                    break;
+                case Command.MESSAGE_DOWNLEFT:
+                    onMoveBackwardLeftCommand((Integer) msg.obj);
+                    break;
+                case Command.MESSAGE_RIGHT:
+                    onMoveRightCommand((Integer) msg.obj);
+                    break;
+                case Command.MESSAGE_LEFT:
+                    onMoveLeftCommand((Integer) msg.obj);
+                    break;
+                case Command.MESSAGE_STOP:
+                    onMoveStopCommand();
+                    break;
+                case Command.MESSAGE_QUALITY:
+                    onChangeQuality(msg.obj);
+                    break;
             }
         }
     };
@@ -87,6 +106,13 @@ public class ConnectionManager {
     public void onDataIncoming() {
         if (connectionListener != null)
             connectionListener.onDataIncoming();
+    }
+
+    public void onChangeQuality(Object obj) {
+        String str  = (String) obj;
+        if (connectionListener != null) {
+            connectionListener.onChangeQuality(str);
+        }
     }
 
     public void onControllerConnected(Socket socket) {
@@ -214,6 +240,24 @@ public class ConnectionManager {
         }
     }
 
+    public void sendPreviewSizes(String str) {
+        try {
+            dos.writeInt(Command.QUALITY.length());
+            dos.write(Command.QUALITY.getBytes());
+            dos.writeInt(str.length());
+            dos.write(str.getBytes());
+            out.flush();
+            if (sendListener != null)
+                sendListener.onSendCommandSuccess();
+        } catch (IOException e) {
+            e.printStackTrace();
+            if (sendListener != null)
+                sendListener.onSendCommandFailure();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void sendCommand(String str) {
         try {
             dos.writeInt(str.length());
@@ -241,6 +285,8 @@ public class ConnectionManager {
         public void onControllerClosed();
 
         public void onDataIncoming();
+
+        public void onChangeQuality(String string);
     }
 
     public interface ControllerCommandListener {

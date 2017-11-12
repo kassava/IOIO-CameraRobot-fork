@@ -11,5 +11,5 @@ public class ExtraKey {
     public static final String OWN_IP_ADDRESS = "own_password";
     public static final String TARGET_PASSWORD = "target_password";
     public static final String IP_ADDRESS = "ip_address";
-
+    public static final String PREVIEW_SIZE_SET = "preview_sizes_set";
 }
