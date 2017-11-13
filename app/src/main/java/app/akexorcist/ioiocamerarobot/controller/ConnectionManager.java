@@ -18,6 +18,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import app.akexorcist.ioiocamerarobot.constant.Command;
+import app.akexorcist.ioiocamerarobot.utils.AverageBitrate;
 
 /**
  * Created by Akexorcist on 9/5/15 AD.
@@ -41,11 +42,15 @@ public class ConnectionManager {
     private String ipAddress;
     private String password;
 
+    private AverageBitrate averageBitrate;
+
     public ConnectionManager(Activity activity, String ipAddress, String password) {
         this.activity = activity;
         this.ipAddress = ipAddress;
         this.password = password;
         this.password = "19655";
+
+        averageBitrate = new AverageBitrate();
     }
 
     public void setConnectionListener(ConnectionListener listener) {
@@ -54,6 +59,10 @@ public class ConnectionManager {
 
     public void setResponseListener(IOIOResponseListener listener) {
         this.responseListener = listener;
+    }
+
+    public long getBitrate() {
+        return averageBitrate.average();
     }
 
     public void start() {
@@ -102,11 +111,13 @@ public class ConnectionManager {
                 buf = new byte[size];
                 dataInputStream.readFully(buf);
                 String qualityStr = new String(buf);
+                if (qualityStr.startsWith("QL")){
+                    responseListener.onPreviewSizesResponse(qualityStr.substring(2));
+                }
                 size = dataInputStream.readInt();
                 buf = new byte[size];
                 dataInputStream.readFully(buf);
                 String sizes = new String(buf);
-                responseListener.onPreviewSizesResponse(sizes);
 
                 while (isTaskRunning) {
                     try {
@@ -133,6 +144,7 @@ public class ConnectionManager {
                                     }
                                 } else if (buffer.length > 20) {
                                     if (responseListener != null) {
+                                        averageBitrate.push(buffer.length);
                                         Bitmap bitmap = BitmapFactory.decodeByteArray(buffer, 0, buffer.length);
                                         responseListener.onCameraImageIncoming(bitmap);
                                     }

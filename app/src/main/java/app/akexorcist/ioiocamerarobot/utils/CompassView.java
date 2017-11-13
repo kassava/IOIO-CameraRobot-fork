@@ -16,11 +16,14 @@ import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
 
+import app.akexorcist.ioiocamerarobot.R;
+
 /**
  * Created by OldMan on 04.11.2016.
  */
 
 public class CompassView extends View {
+
     private enum CompassDirection {
         N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW
     }

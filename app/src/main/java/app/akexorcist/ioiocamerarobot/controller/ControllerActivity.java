@@ -7,8 +7,10 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -24,6 +26,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,10 +40,13 @@ import java.util.ArrayList;
 import app.akexorcist.ioiocamerarobot.R;
 import app.akexorcist.ioiocamerarobot.constant.Command;
 import app.akexorcist.ioiocamerarobot.constant.ExtraKey;
+import app.akexorcist.ioiocamerarobot.utils.CompassView;
 
 public class ControllerActivity extends Activity implements ConnectionManager.IOIOResponseListener,
         ConnectionManager.ConnectionListener, OnClickListener, SeekBar.OnSeekBarChangeListener,
-        JoyStickManager.JoyStickEventListener {
+        JoyStickManager.JoyStickEventListener, OnMapReadyCallback {
+
+    private final String LOG_TAG = ControllerActivity.class.getSimpleName();
 
     private ImageView ivCameraImage;
 
@@ -50,6 +60,12 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     private FloatingActionButton fabQuality;
     private FloatingActionButton fabFlash;
     private RelativeLayout layoutJoyStick;
+
+    private CompassView compassView;
+    private MapView mapView;
+    private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
+
+    private TextView tvBitrate;
 
     private Button btnPreviewSizeChooser;
     private TextView textView;
@@ -84,16 +100,83 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
         fabFlash = findViewById(R.id.fab_flash);
         fabFlash.setOnClickListener(this);
 
+        compassView = findViewById(R.id.compassView);
+
+        // *** IMPORTANT ***
+        // MapView requires that the Bundle you pass contain _ONLY_ MapView SDK
+        // objects or sub-Bundles.
+        Bundle mapViewBundle = null;
+        if (savedInstanceState != null) {
+            mapViewBundle = savedInstanceState.getBundle(MAPVIEW_BUNDLE_KEY);
+        }
+        mapView = findViewById(R.id.mapView);
+        mapView.onCreate(mapViewBundle);
+        mapView.getMapAsync(this);
+
+        tvBitrate = findViewById(R.id.tvBitrate);
+
         connectionManager = new ConnectionManager(this, ipAddress, password);
         connectionManager.start();
         connectionManager.setConnectionListener(this);
         connectionManager.setResponseListener(this);
+
+
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        Bundle mapViewBundle = outState.getBundle(MAPVIEW_BUNDLE_KEY);
+        if (mapViewBundle == null) {
+            mapViewBundle = new Bundle();
+            outState.putBundle(MAPVIEW_BUNDLE_KEY, mapViewBundle);
+        }
+
+        mapView.onSaveInstanceState(mapViewBundle);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mapView.onResume();
+        handler.post(updateBitrate);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mapView.onStart();
+    }
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+        map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+    }
+
+    @Override
+    protected void onPause() {
+        mapView.onPause();
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        mapView.onDestroy();
+        super.onDestroy();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        mapView.onLowMemory();
     }
 
     @Override
     public void onStop() {
         super.onStop();
         connectionManager.stop();
+        mapView.onStop();
 //        finish();
     }
 
@@ -233,6 +316,7 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     @Override
     public void onPreviewSizesResponse(String previewSizesStr) {
         try {
+            Log.d(LOG_TAG, "onPreviewSizesResponse: " + previewSizesStr);
             JSONArray jsonArray = new JSONArray(previewSizesStr);
             previewSizeList = new ArrayList<>();
             int len = jsonArray.length();
@@ -333,8 +417,8 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
 
     @Override
     public void onJoyStickNone() {
-        connectionManager.sendMovement(Command.STOP);
-        connectionManager.sendMovement(Command.STOP);
+        connectionManager.sendMovement(Command.STOP + "0");
+        connectionManager.sendMovement(Command.STOP + "0");
     }
 
     @Override
@@ -360,4 +444,20 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     public void updateTextViewQuality(int quality) {
         textView.setText(getString(R.string.image_quality, quality));
     }
+
+    private final Handler handler = new Handler();
+
+    private Runnable updateBitrate = new Runnable() {
+        @Override
+        public void run() {
+            if (connectionManager != null) {
+                long bitrate = connectionManager.getBitrate();
+                String bitrateStr = "" + bitrate / 1000 +" kbps";
+                tvBitrate.setText(bitrateStr);
+                handler.postDelayed(updateBitrate, 1000);
+            } else {
+                tvBitrate.setText("0 kbps");
+            }
+        }
+    };
 }

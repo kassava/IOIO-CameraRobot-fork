@@ -36,5 +36,8 @@
     <!-- view_simple_text.xml -->
     <dimen name="button_menu_width">334dp</dimen>
     <dimen name="button_menu_height">600dp</dimen>
+
+    <!-- compass view -->
+    <dimen name="text_size_compass">14sp</dimen>
     
 </resources>

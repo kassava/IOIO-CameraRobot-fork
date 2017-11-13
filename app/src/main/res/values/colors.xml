@@ -12,4 +12,16 @@
     <color name="black">#000000</color>
     <color name="dark_tranparent">#20000000</color>
 
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="marker_color">#FFFF</color>
+    <color name="shadow_color">#7AAA</color>
+    <color name="text_color">#FFFF</color>
+    <color name="horizon_sky_from">#FFA52A2A</color>
+    <color name="horizon_sky_to">#FFFFC125</color>
+    <color name="horizon_ground_from">#FF5F9EA0</color>
+    <color name="horizon_ground_to">#FF00008B</color>
+    <color name="actionbar_background_sensors">#fb8521</color>
+
 </resources>

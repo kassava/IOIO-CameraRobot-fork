@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
@@ -39,6 +40,7 @@ import ioio.lib.util.android.IOIOActivity;
 public class IOIOControllerActivity extends IOIOActivity implements CameraManager.CameraManagerListener, Callback, ConnectionManager.ConnectionListener, ConnectionManager.ControllerCommandListener, ConnectionManager.SendCommandListener {
     
     private static final int TAKE_PICTURE_COOLDOWN = 1000;
+    private final String LOG_TAG = IOIOControllerActivity.class.getSimpleName();
     private RelativeLayout layoutParent;
     private TextView tvMovementSpeed;
     private TextView tvIpAddress;
@@ -153,6 +155,8 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
     public void onQualityRequest() {
         SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
         String previewSizesList = settings.getString(ExtraKey.PREVIEW_SIZE_SET, "");
+        previewSizesList = "QL" + previewSizesList;
+        Log.d(LOG_TAG, "onQualityRequest: " + previewSizesList);
         connectionManager.sendPreviewSizes(previewSizesList);
     }
 
