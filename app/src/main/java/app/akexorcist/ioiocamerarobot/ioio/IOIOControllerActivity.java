@@ -70,7 +70,7 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
         setContentView(R.layout.activity_ioio);
 
         String ipAddress = getIntent().getExtras().getString(ExtraKey.OWN_IP_ADDRESS);
-        ipAddress = "19655";
+//        ipAddress = "19655";
         int selectedPreviewSize = getIntent().getExtras().getInt(ExtraKey.PREVIEW_SIZE);
         imageQuality = getIntent().getExtras().getInt(ExtraKey.QUALITY);
 

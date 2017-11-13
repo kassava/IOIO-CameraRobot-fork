@@ -11,6 +11,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:adjustViewBounds="true"
-        android:src="@drawable/logo_inex"
-        android:contentDescription="@null" />
+        android:background="@color/light_green"
+        android:contentDescription="@null"
+        android:src="@mipmap/ic_launcher_foreground" />
 </RelativeLayout>

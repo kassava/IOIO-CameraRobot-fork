@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/relativeLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fffbd5"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+
+    <requestFocus
+        android:id="@+id/requestFocus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="145dp"
+        android:layout_height="142dp"
+        android:contentDescription="@null"
+        android:src="@drawable/dialog_header_control" />
+
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="228dp"
+        android:layout_marginTop="140dp"
+        android:text="@string/ip_address"
+        android:textAppearance="@android:style/TextAppearance.Material.Widget.EditText"
+        android:textColor="@color/green"
+        android:textSize="@dimen/connection_text_size"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/et_ip_address"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="228dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:hint="@string/default_ip_address"
+        android:inputType="text"
+        android:maxLength="15"
+        android:singleLine="true"
+        android:textColor="?attr/colorPrimary"
+        android:textSize="@dimen/connection_text_size"
+        android:theme="@style/MyEditText"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView3"
+        app:layout_constraintVertical_bias="0.057" />
+
+    <!--android:textColor="@color/light_green"-->
+    <!--<Button-->
+    <!--android:id="@+id/btn_connect"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:background="@drawable/button_login"-->
+    <!--tools:layout_editor_absoluteX="42dp"-->
+    <!--tools:layout_editor_absoluteY="181dp" />-->
+
+    <Button
+        android:id="@+id/btn_connect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/connect"
+        android:textAppearance="@android:style/TextAppearance.Material.Widget.Button"
+        android:textSize="@dimen/connection_text_size"
+        android:theme="@style/MyButton"
+        app:layout_constraintBottom_toBottomOf="@+id/et_ip_address"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.111"
+        app:layout_constraintStart_toEndOf="@+id/et_ip_address"
+        app:layout_constraintTop_toTopOf="@+id/et_ip_address"
+        app:layout_constraintVertical_bias="0.431" />
+
+
+</android.support.constraint.ConstraintLayout>

@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -24,7 +25,7 @@ import app.akexorcist.ioiocamerarobot.constant.Command;
 public class IOIOService extends AsyncTask<Void, Void, Void> {
 
     private static final String TAG = "IOIOService";
-    private static final int PORT = 21111;
+    private static final int PORT = 10082;
     private static final int TIMEOUT = 3000;
 
     private boolean isTaskRunning = true;
@@ -102,29 +103,29 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
         new Thread(run).start();
 
         try {
-            serverSocket = new ServerSocket(PORT);
-            serverSocket.setSoTimeout(TIMEOUT);
-            Log.i(TAG, "Waiting for connect");
-            while (socket == null && isTaskRunning) {
-                try {
-                    socket = serverSocket.accept();
-                    socket.setSoTimeout(TIMEOUT);
-                } catch (InterruptedIOException e) {
-                    Log.i(TAG, "Waiting for connect");
-                } catch (SocketException e) {
-                   e.printStackTrace();
-                }
-            }
-
+//            serverSocket = new ServerSocket(PORT);
+//            serverSocket.setSoTimeout(TIMEOUT);
+//            Log.i(TAG, "Waiting for connect");
 //            while (socket == null && isTaskRunning) {
 //                try {
-//                    socket = new Socket();
-//                    socket.connect((new InetSocketAddress(InetAddress.getByName(ipAddress), PORT)), TIMEOUT);
-//                } catch (Exception e) {
-//                    handler.obtainMessage(Command.MESSAGE_STOP).sendToTarget();
-//                    isTaskRunning = false;
+//                    socket = serverSocket.accept();
+//                    socket.setSoTimeout(TIMEOUT);
+//                } catch (InterruptedIOException e) {
+//                    Log.i(TAG, "Waiting for connect");
+//                } catch (SocketException e) {
+//                   e.printStackTrace();
 //                }
 //            }
+
+            while (socket == null && isTaskRunning) {
+                try {
+                    socket = new Socket();
+                    socket.connect((new InetSocketAddress(InetAddress.getByName(ipAddress), PORT)), TIMEOUT);
+                } catch (Exception e) {
+                    handler.obtainMessage(Command.MESSAGE_STOP).sendToTarget();
+                    isTaskRunning = false;
+                }
+            }
 
             if (isTaskRunning) {
                 inputStream = socket.getInputStream();
@@ -133,11 +134,11 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
                 byte[] buffer = new byte[size];
                 String str = new String(buffer);
                 dataInputStream.readFully(buffer);
-                if ((new String(buffer)).equalsIgnoreCase(ipAddress)) {
-                    handler.obtainMessage(Command.MESSAGE_PASS, socket).sendToTarget();
-                } else {
-                    handler.obtainMessage(Command.MESSAGE_WRONG, socket).sendToTarget();
-                }
+//                if ((new String(buffer)).equalsIgnoreCase(ipAddress)) {
+//                    handler.obtainMessage(Command.MESSAGE_PASS, socket).sendToTarget();
+//                } else {
+//                    handler.obtainMessage(Command.MESSAGE_WRONG, socket).sendToTarget();
+//                }
             }
 
         } catch (IOException e) {

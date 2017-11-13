@@ -23,7 +23,7 @@ public class SplashScreenActivity extends Activity implements Animator.AnimatorL
         ivInexLogo.setAlpha(0f);
 
         goToMenuActivity();
-//        startLogoAnimation();
+        startLogoAnimation();
     }
 
     public void startLogoAnimation() {

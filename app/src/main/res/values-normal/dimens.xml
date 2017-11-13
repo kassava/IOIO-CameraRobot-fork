@@ -36,5 +36,5 @@
     <!-- view_simple_text.xml -->
     <dimen name="button_menu_width">130dp</dimen>
     <dimen name="button_menu_height">234dp</dimen>
-    
+    <dimen name="card_element_margin">8dp</dimen>
 </resources>

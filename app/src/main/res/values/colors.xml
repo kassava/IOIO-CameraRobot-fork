@@ -2,9 +2,10 @@
 <resources>
 
     <color name="pink">#ca2559</color>
+    <color name="indigo">#3F51B5</color>
     <color name="light_pink">#fe3e7a</color>
     <color name="green">#136755</color>
-    <color name="light_green">#3fa992</color>
+    <color name="light_green">#B2EBF2</color>
 
     <color name="text_pink">@color/pink</color>
     <color name="yellow">#fffbd5</color>

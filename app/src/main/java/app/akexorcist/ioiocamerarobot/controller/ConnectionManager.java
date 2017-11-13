@@ -3,6 +3,7 @@ package app.akexorcist.ioiocamerarobot.controller;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -24,8 +25,9 @@ import app.akexorcist.ioiocamerarobot.constant.Command;
  */
 public class ConnectionManager {
 
-    public static final int PORT = 21111;
+    public static final int PORT = 10083;
     public static final int TIMEOUT = 5000;
+    private static final String TAG = ConnectionManager.class.getSimpleName();
     private Activity activity;
     private ConnectionListener connectionListener;
     private IOIOResponseListener responseListener;
@@ -117,6 +119,7 @@ public class ConnectionManager {
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                Log.d(TAG,"data: " + new String(buffer));
                                 if (buffer.length > 0 && buffer.length < 20) {
                                     if (new String(buffer).equalsIgnoreCase(Command.SNAP)) {
                                         if (responseListener != null)

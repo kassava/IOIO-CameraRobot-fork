@@ -42,4 +42,15 @@
         <item name="fab_colorRipple">#62B2FF</item>
     </style>
 
+    <style name="MyButton" parent="Widget.AppCompat.Button.Colored">
+        <item name="colorControlHighlight">@color/indigo</item>
+        <item name="colorButtonNormal">@color/pink</item>
+    </style>
+
+    <style name="MyEditText" parent="Theme.AppCompat.Light">
+        <item name="colorControlNormal">@color/indigo</item>
+        <item name="colorControlActivated">@color/pink</item>
+        <item name="android:padding">20dp</item>
+        <item name="android:background">@null</item>
+    </style>
 </resources>
