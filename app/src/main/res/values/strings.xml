@@ -26,5 +26,7 @@
     <string name="speed_0">Speed 0</string>
     <string name="default_quality">1280 X 720, 81 %</string>
     <string name="quality_selection">Выбор качества</string>
+    <string name="flash_off">Flash off</string>
+    <string name="flash_on">Flash on</string>
 
 </resources>

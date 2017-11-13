@@ -16,9 +16,6 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -38,11 +35,10 @@ import app.akexorcist.ioiocamerarobot.constant.Command;
 import app.akexorcist.ioiocamerarobot.constant.ExtraKey;
 
 public class ControllerActivity extends Activity implements ConnectionManager.IOIOResponseListener,
-        ConnectionManager.ConnectionListener, OnClickListener, OnCheckedChangeListener, SeekBar.OnSeekBarChangeListener,
+        ConnectionManager.ConnectionListener, OnClickListener, SeekBar.OnSeekBarChangeListener,
         JoyStickManager.JoyStickEventListener {
 
     private ImageView ivCameraImage;
-    private CheckBox cbFlash;
 
     private ConnectionManager connectionManager;
     private ArrayList<String> previewSizeList;
@@ -52,6 +48,7 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     private FloatingActionButton fabTakePhoto;
     private FloatingActionButton fabAutoFocus;
     private FloatingActionButton fabQuality;
+    private FloatingActionButton fabFlash;
     private RelativeLayout layoutJoyStick;
 
     private Button btnPreviewSizeChooser;
@@ -84,8 +81,8 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
         fabQuality = findViewById(R.id.fab_quality);
         fabQuality.setOnClickListener(this);
 
-        cbFlash = findViewById(R.id.cbFlash);
-        cbFlash.setOnCheckedChangeListener(this);
+        fabFlash = findViewById(R.id.fab_flash);
+        fabFlash.setOnClickListener(this);
 
         connectionManager = new ConnectionManager(this, ipAddress, password);
         connectionManager.start();
@@ -114,6 +111,9 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
                 break;
             case R.id.btn_preview_size:
                 createPreviewSizeChooserDialog();
+                break;
+            case R.id.fab_flash:
+                changeFlash();
                 break;
         }
     }
@@ -161,6 +161,9 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     }
 
     public void changeQuality() {
+        if (previewSizeList == null) {
+            return;
+        }
         ConstraintLayout view = (ConstraintLayout) getLayoutInflater().inflate(R.layout.dialog_image_quality, null);
         btnPreviewSizeChooser = view.findViewById(R.id.btn_preview_size);
         btnPreviewSizeChooser.setOnClickListener(this);
@@ -192,8 +195,19 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
         dialog.show();
     }
 
-    @Override
-    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+    public void changeFlash() {
+        if (fabFlash.getLabelText().equals(getString(R.string.flash_off))) {
+            fabFlash.setLabelText(getString(R.string.flash_on));
+            fabFlash.setImageResource(R.drawable.ic_flash_on);
+            onCheckedChanged(true);
+        } else {
+            fabFlash.setLabelText(getString(R.string.flash_off));
+            fabFlash.setImageResource(R.drawable.ic_flash_on);
+            onCheckedChanged(false);
+        }
+    }
+
+    public void onCheckedChanged(boolean isChecked) {
         if (isChecked) {
             connectionManager.sendCommand(Command.LED_ON);
         } else {

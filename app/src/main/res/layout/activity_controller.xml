@@ -2,6 +2,7 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                                              xmlns:app="http://schemas.android.com/apk/res-auto"
                                              xmlns:fab="http://schemas.android.com/apk/res-auto"
+                                             xmlns:tools="http://schemas.android.com/tools"
                                              android:id="@+id/relativeLayout2"
                                              android:layout_width="match_parent"
                                              android:layout_height="match_parent"
@@ -11,26 +12,12 @@
     <ImageView
         android:id="@+id/iv_camera_image"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:contentDescription="@null"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
-
-    <CheckBox
-        android:id="@+id/cbFlash"
-        android:layout_width="@dimen/command_button_size"
-        android:layout_height="@dimen/command_button_size"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/button_flash"
-        android:button="@null"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
-
 
     <RelativeLayout
         android:id="@+id/layout_joystick"
@@ -64,20 +51,22 @@
         fab:menu_labels_hideAnimation="@anim/jump_to_down"
         fab:menu_labels_showAnimation="@anim/jump_from_down">
 
+
         <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/fab_auto_focus"
+            android:id="@+id/fab_flash"
             style="@style/MenuButtonsStyle"
-            android:layout_width="@dimen/fab_size_mini"
-            android:layout_height="@dimen/fab_size_mini"
-            android:src="@drawable/ic_action_name"
-            fab:fab_label="Autofocus"/>
+            android:layout_width="@dimen/command_button_size"
+            android:layout_height="@dimen/command_button_size"
+            android:src="@drawable/ic_flash_off"
+            app:layout_constraintEnd_toEndOf="parent"
+            fab:fab_label="@string/flash_off"/>
 
         <com.github.clans.fab.FloatingActionButton
             android:id="@+id/fab_quality"
             style="@style/MenuButtonsStyle"
             android:layout_width="@dimen/fab_size_mini"
             android:layout_height="@dimen/fab_size_mini"
-            android:src="@drawable/ic_action_name"
+            android:src="@drawable/ic_aspect_ratio"
             fab:fab_label="Quality"/>
 
         <com.github.clans.fab.FloatingActionButton
@@ -85,9 +74,44 @@
             style="@style/MenuButtonsStyle"
             android:layout_width="@dimen/fab_size_mini"
             android:layout_height="@dimen/fab_size_mini"
-            android:src="@drawable/ic_action_name"
+            android:src="@drawable/ic_snap"
             fab:fab_label="Take photo"/>
 
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_auto_focus"
+            style="@style/MenuButtonsStyle"
+            android:layout_width="@dimen/fab_size_mini"
+            android:layout_height="@dimen/fab_size_mini"
+            android:src="@drawable/ic_focus"
+            fab:fab_label="Autofocus"/>
+
     </com.github.clans.fab.FloatingActionMenu>
+
+    <com.google.android.gms.maps.MapView
+        android:id="@+id/mapView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/guideline4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/guideline2"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.8"/>
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.25"/>
 
 </android.support.constraint.ConstraintLayout>
