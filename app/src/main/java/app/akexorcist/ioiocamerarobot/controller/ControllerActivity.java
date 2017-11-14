@@ -367,6 +367,7 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
         lvAvailablePreviewSize.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 connectionManager.sendCommand(Command.SELECTED_IP + ipList.get(position));
+                connectionManager.sendCommand("19655");
                 ipListDialog.cancel();
             }
         });

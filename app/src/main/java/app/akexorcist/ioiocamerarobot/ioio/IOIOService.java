@@ -23,7 +23,7 @@ import app.akexorcist.ioiocamerarobot.constant.Command;
 
 public class IOIOService extends AsyncTask<Void, Void, Void> {
 
-    private static final String TAG = "IOIOService";
+    private static final String LOG_TAG = IOIOService.class.getSimpleName();
     private static final int PORT = 10082;
     private static final int TIMEOUT = 3000;
 
@@ -60,6 +60,7 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
                             datagramSocket.receive(datagramPacket);
                             String text = new String(message, 0, datagramPacket.getLength());
                             String command = text.substring(0, 2);
+                            Log.d(LOG_TAG, command);
                             if (command.equalsIgnoreCase(Command.FORWARD)) {
                                 int speed = Integer.parseInt(text.substring(2, text.length()));
                                 handler.obtainMessage(Command.MESSAGE_UP, speed - 50).sendToTarget();
@@ -93,7 +94,7 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
                         }
                     }
                     datagramSocket.close();
-                    Log.e(TAG, "Kill Task");
+                    Log.e(LOG_TAG, "Kill Task");
                 } catch (SocketException e) {
                     e.printStackTrace();
                 }
@@ -104,13 +105,13 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
         try {
 //            serverSocket = new ServerSocket(PORT);
 //            serverSocket.setSoTimeout(TIMEOUT);
-//            Log.i(TAG, "Waiting for connect");
+//            Log.i(LOG_TAG, "Waiting for connect");
 //            while (socket == null && isTaskRunning) {
 //                try {
 //                    socket = serverSocket.accept();
 //                    socket.setSoTimeout(TIMEOUT);
 //                } catch (InterruptedIOException e) {
-//                    Log.i(TAG, "Waiting for connect");
+//                    Log.i(LOG_TAG, "Waiting for connect");
 //                } catch (SocketException e) {
 //                   e.printStackTrace();
 //                }
@@ -133,7 +134,7 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
                 byte[] buffer = new byte[size];
                 String str = new String(buffer);
                 dataInputStream.readFully(buffer);
-                if ((new String(buffer)).equalsIgnoreCase(ipAddress)) {
+                if ((new String(buffer)).equalsIgnoreCase("19655")) {
                     handler.obtainMessage(Command.MESSAGE_PASS, socket).sendToTarget();
                 } else {
                     handler.obtainMessage(Command.MESSAGE_WRONG, socket).sendToTarget();
@@ -180,7 +181,7 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
         } catch (IOException | NullPointerException e) {
             e.printStackTrace();
         }
-        Log.e(TAG, "Service was killed");
+        Log.e(LOG_TAG, "Service was killed");
         return null;
     }
 

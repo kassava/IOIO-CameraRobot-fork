@@ -3,6 +3,7 @@ package app.akexorcist.ioiocamerarobot.controller;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -27,6 +28,7 @@ public class ConnectionManager {
 
     private static final int PORT = 10083;
     private static final int TIMEOUT = 5000;
+    private static final String LOG_TAG = "Controller" + ConnectionManager.class.getSimpleName();
     private Activity activity;
     private ConnectionListener connectionListener;
     private IOIOResponseListener responseListener;
@@ -86,7 +88,6 @@ public class ConnectionManager {
                 int size = dataInputStream.readInt();
                 byte[] buf = new byte[size];
                 dataInputStream.readFully(buf);
-
                 final String sourceIpListStr = new String(buf);
                 if (sourceIpListStr.startsWith(Command.IP_LIST)) {
                     activity.runOnUiThread(new Runnable() {
@@ -97,6 +98,18 @@ public class ConnectionManager {
                         }
                     });
                 }
+
+                if (sourceIpListStr.endsWith("[]")) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            connectionListener.onConnectionDown();
+                        }
+                    });
+                    return;
+                }
+
+                sendCommand(password);
 
                 size = dataInputStream.readInt();
                 buf = new byte[size];
@@ -223,6 +236,7 @@ public class ConnectionManager {
 
     public void sendCommand(String str) {
         try {
+            Log.d(LOG_TAG, "command: " + str);
             dataOutputStream.writeInt(str.length());
             dataOutputStream.write(str.getBytes());
             outputStream.flush();
