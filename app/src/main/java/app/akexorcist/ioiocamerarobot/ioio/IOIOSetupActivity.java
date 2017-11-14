@@ -128,7 +128,7 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
 
     public void goToIOIOController() {
         Intent intent = new Intent(this, IOIOControllerActivity.class);
-        intent.putExtra(ExtraKey.OWN_IP_ADDRESS, etIpAddress.getText().toString());
+        intent.putExtra(ExtraKey.IP_ADDRESS, etIpAddress.getText().toString());
         intent.putExtra(ExtraKey.PREVIEW_SIZE, selectedSizePosition);
         intent.putExtra(ExtraKey.QUALITY, sbImageQuality.getProgress());
         startActivity(intent);

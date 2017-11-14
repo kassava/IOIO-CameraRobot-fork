@@ -27,11 +27,11 @@ public class ControllerSetupActivity extends Activity implements OnClickListener
         setContentView(R.layout.activity_controller_connection);
         SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, 0);
 
-        etIpAddress = (EditText) findViewById(R.id.et_ip_address);
+        etIpAddress = findViewById(R.id.et_ip_address);
         setInputFilterForEditText(etIpAddress);
         etIpAddress.setText(settings.getString(ExtraKey.IP_ADDRESS, DEFAULT_IP_ADDRESS));
 
-        btnConnect = (Button) findViewById(R.id.btn_connect);
+        btnConnect = findViewById(R.id.btn_connect);
         btnConnect.setOnClickListener(this);
     }
 
@@ -44,7 +44,6 @@ public class ControllerSetupActivity extends Activity implements OnClickListener
         SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putString(ExtraKey.IP_ADDRESS, etIpAddress.getText().toString());
-//        editor.putString(ExtraKey.TARGET_PASSWORD, etIp.getText().toString());
         editor.putString(ExtraKey.TARGET_PASSWORD, "19655");
         editor.apply();
     }
@@ -52,7 +51,6 @@ public class ControllerSetupActivity extends Activity implements OnClickListener
     public void goToController() {
         Intent intent = new Intent(ControllerSetupActivity.this, ControllerActivity.class);
         intent.putExtra(ExtraKey.IP_ADDRESS, etIpAddress.getText().toString());
-//        intent.putExtra(ExtraKey.TARGET_PASSWORD, etIp.getText().toString());
         intent.putExtra(ExtraKey.TARGET_PASSWORD, "19655");
         startActivity(intent);
     }

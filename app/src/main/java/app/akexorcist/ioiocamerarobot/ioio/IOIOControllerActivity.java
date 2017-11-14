@@ -71,8 +71,7 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_ioio);
 
-        String ipAddress = getIntent().getExtras().getString(ExtraKey.OWN_IP_ADDRESS);
-        ipAddress = "19655";
+        String ipAddress = getIntent().getExtras().getString(ExtraKey.IP_ADDRESS);
         int selectedPreviewSize = getIntent().getExtras().getInt(ExtraKey.PREVIEW_SIZE);
         imageQuality = getIntent().getExtras().getInt(ExtraKey.QUALITY);
 
@@ -155,7 +154,7 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
     public void onQualityRequest() {
         SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
         String previewSizesList = settings.getString(ExtraKey.PREVIEW_SIZE_SET, "");
-        previewSizesList = "QL" + previewSizesList;
+        previewSizesList = Command.QUALITY_LIST + previewSizesList;
         Log.d(LOG_TAG, "onQualityRequest: " + previewSizesList);
         connectionManager.sendPreviewSizes(previewSizesList);
     }
@@ -369,6 +368,14 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
         e.printStackTrace();
         showToast(getString(R.string.out_of_memory));
         finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        connectionManager.stop();
+        connectionManager.onControllerClosed();
+        cameraManager.stopCameraPreview();
+        super.onBackPressed();
     }
 
     public void showToast(String message) {

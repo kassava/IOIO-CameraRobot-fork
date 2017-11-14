@@ -25,16 +25,14 @@ import app.akexorcist.ioiocamerarobot.utils.AverageBitrate;
  */
 public class ConnectionManager {
 
-    public static final int PORT = 21111;
-    public static final int TIMEOUT = 5000;
+    private static final int PORT = 10083;
+    private static final int TIMEOUT = 5000;
     private Activity activity;
     private ConnectionListener connectionListener;
     private IOIOResponseListener responseListener;
 
     private OutputStream outputStream;
     private DataOutputStream dataOutputStream;
-    private InputStream inputStream;
-    private DataInputStream dataInputStream;
 
     private Socket socket;
     private boolean isTaskRunning = false;
@@ -72,48 +70,56 @@ public class ConnectionManager {
         }
     }
 
-    Runnable readThread = new Runnable() {
+    private Runnable readThread = new Runnable() {
         public void run() {
             try {
                 socket = new Socket();
-                socket.connect((new InetSocketAddress(InetAddress.getByName(ipAddress), PORT)), TIMEOUT);
+                socket.connect((new InetSocketAddress(InetAddress.getByName(ipAddress), PORT)),
+                        TIMEOUT);
 
                 outputStream = socket.getOutputStream();
                 dataOutputStream = new DataOutputStream(outputStream);
 
-                inputStream = socket.getInputStream();
-                dataInputStream = new DataInputStream(inputStream);
-                sendCommand(password);
+                InputStream inputStream = socket.getInputStream();
+                DataInputStream dataInputStream = new DataInputStream(inputStream);
 
                 int size = dataInputStream.readInt();
                 byte[] buf = new byte[size];
                 dataInputStream.readFully(buf);
 
                 final String sourceIpListStr = new String(buf);
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        connectionListener.onSourcesIpList(sourceIpListStr);
-                    }
-                });
+                if (sourceIpListStr.startsWith(Command.IP_LIST)) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            connectionListener.onSourcesIpList(sourceIpListStr
+                                    .substring(Command.IP_LIST.length()));
+                        }
+                    });
+                }
 
                 size = dataInputStream.readInt();
                 buf = new byte[size];
                 dataInputStream.readFully(buf);
                 String acceptStr = new String(buf);
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        connectionListener.onIOIOConnected();
-                    }
-                });
+                if (acceptStr.equalsIgnoreCase(Command.ACCEPT_CONNECTION)) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            connectionListener.onIOIOConnected();
+                        }
+                    });
+                }
+
                 size = dataInputStream.readInt();
                 buf = new byte[size];
                 dataInputStream.readFully(buf);
                 String qualityStr = new String(buf);
-                if (qualityStr.startsWith("QL")){
-                    responseListener.onPreviewSizesResponse(qualityStr.substring(2));
+                if (qualityStr.startsWith(Command.QUALITY_LIST)){
+                    responseListener.onPreviewSizesResponse(qualityStr
+                            .substring(Command.QUALITY_LIST.length()));
                 }
+
                 size = dataInputStream.readInt();
                 buf = new byte[size];
                 dataInputStream.readFully(buf);
@@ -182,26 +188,26 @@ public class ConnectionManager {
 
     public interface ConnectionListener {
 
-        public void onConnectionDown();
+        void onConnectionDown();
 
-        public void onConnectionFailed();
+        void onConnectionFailed();
 
-        public void onWrongPassword();
+        void onWrongPassword();
 
-        public void onIOIOConnected();
+        void onIOIOConnected();
 
-        public void onSourcesIpList(String ipListStr);
+        void onSourcesIpList(String ipListStr);
     }
 
     public interface IOIOResponseListener {
 
-        public void onPictureTaken();
+        void onPictureTaken();
 
-        public void onFlashUnavailable();
+        void onFlashUnavailable();
 
-        public void onCameraImageIncoming(Bitmap bitmap);
+        void onCameraImageIncoming(Bitmap bitmap);
 
-        public void onPreviewSizesResponse(String previewSizesStr);
+        void onPreviewSizesResponse(String previewSizesStr);
     }
 
     public void stop() {

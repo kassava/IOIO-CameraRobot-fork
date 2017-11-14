@@ -242,8 +242,8 @@ public class ConnectionManager {
 
     public void sendPreviewSizes(String str) {
         try {
-            dos.writeInt(Command.QUALITY.length());
-            dos.write(Command.QUALITY.getBytes());
+            dos.writeInt(Command.QUALITY_LIST.length());
+            dos.write(Command.QUALITY_LIST.getBytes());
             dos.writeInt(str.length());
             dos.write(str.getBytes());
             out.flush();

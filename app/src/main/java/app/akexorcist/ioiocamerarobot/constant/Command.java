@@ -11,7 +11,12 @@ public class Command {
     public static final String FLASH_UNAVAILABLE = "NoFlash";
     public static final String SNAP = "SNAP";
     public static final String FOCUS = "FOCUS";
+
+    // Prefix for a command
     public static final String QUALITY = "QY"; // quality
+    public static final String QUALITY_LIST = "QL"; // list of supported preview sizes
+    public static final String IP_LIST = "IP_LST"; // list of active media sources
+    public static final String SELECTED_IP = "S_IP"; // selected ip of media sources
 
     // Unique command for IOIO Service
     public static final int MESSAGE_UPDATE = 0;

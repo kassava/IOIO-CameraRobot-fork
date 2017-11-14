@@ -36,6 +36,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import app.akexorcist.ioiocamerarobot.R;
 import app.akexorcist.ioiocamerarobot.constant.Command;
@@ -359,16 +360,31 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
         ipListDialog.setCancelable(true);
 
         final ArrayList<String> ipList = new ArrayList<>();
+        ipList.addAll(getStrings(ipListStr));
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.view_simple_textview, ipList);
         ListView lvAvailablePreviewSize = ipListDialog.findViewById(R.id.lv_available_preview_size);
         lvAvailablePreviewSize.setAdapter(adapter);
         lvAvailablePreviewSize.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                connectionManager.sendCommand(ipList.get(position));
+                connectionManager.sendCommand(Command.SELECTED_IP + ipList.get(position));
                 ipListDialog.cancel();
             }
         });
         ipListDialog.show();
+    }
+
+    private List<String> getStrings(String response) {
+        JSONArray arr;
+        List<String> list = new ArrayList<>();
+        try {
+            arr = new JSONArray(response);
+            for(int i = 0; i < arr.length(); i++){
+                list.add(arr.getString(i));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     public void showToast(String message) {
@@ -453,7 +469,9 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
             if (connectionManager != null) {
                 long bitrate = connectionManager.getBitrate();
                 String bitrateStr = "" + bitrate / 1000 +" kbps";
-                tvBitrate.setText(bitrateStr);
+                if (tvBitrate != null) {
+                    tvBitrate.setText(bitrateStr);
+                }
                 handler.postDelayed(updateBitrate, 1000);
             } else {
                 tvBitrate.setText("0 kbps");
