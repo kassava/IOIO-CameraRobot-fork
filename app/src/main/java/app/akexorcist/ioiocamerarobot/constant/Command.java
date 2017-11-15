@@ -12,6 +12,9 @@ public class Command {
     public static final String SNAP = "SNAP";
     public static final String FOCUS = "FOCUS";
 
+    public static final String TOKEN = "19655";
+    public static final String STOP_PREVIEW = "STP_PRVW";
+
     // Prefix for a command
     public static final String QUALITY = "QY"; // quality
     public static final String QUALITY_LIST = "QL"; // list of supported preview sizes
@@ -38,6 +41,7 @@ public class Command {
     public static final int MESSAGE_DOWNLEFT = 16;
     public static final int MESSAGE_LEFT = 17;
     public static final int MESSAGE_UPLEFT = 18;
+    public static final int MESSAGE_STOP_PREVIEW = 19;
 
     public static final String FORWARD = "UU";
     public static final String FORWARD_RIGHT = "UR";

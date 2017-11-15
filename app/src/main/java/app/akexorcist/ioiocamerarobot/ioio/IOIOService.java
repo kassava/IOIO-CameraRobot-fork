@@ -130,15 +130,15 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
             if (isTaskRunning) {
                 inputStream = socket.getInputStream();
                 dataInputStream = new DataInputStream(inputStream);
-                int size = dataInputStream.readInt();
-                byte[] buffer = new byte[size];
-                String str = new String(buffer);
-                dataInputStream.readFully(buffer);
-                if ((new String(buffer)).equalsIgnoreCase("19655")) {
-                    handler.obtainMessage(Command.MESSAGE_PASS, socket).sendToTarget();
-                } else {
-                    handler.obtainMessage(Command.MESSAGE_WRONG, socket).sendToTarget();
-                }
+//                int size = dataInputStream.readInt();
+//                byte[] buffer = new byte[size];
+//                String str = new String(buffer);
+//                dataInputStream.readFully(buffer);
+//                if ((new String(buffer)).equalsIgnoreCase(Command.TOKEN)) {
+//                    handler.obtainMessage(Command.MESSAGE_PASS, socket).sendToTarget();
+//                } else {
+//                    handler.obtainMessage(Command.MESSAGE_WRONG, socket).sendToTarget();
+//                }
             }
 
         } catch (IOException e) {
@@ -161,6 +161,10 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
                     handler.obtainMessage(Command.MESSAGE_FOCUS).sendToTarget();
                 } else if (subStr.equalsIgnoreCase(Command.QUALITY)) {
                     handler.obtainMessage(Command.MESSAGE_QUALITY, data).sendToTarget();
+                } else if (data.equalsIgnoreCase(Command.TOKEN)) {
+                    handler.obtainMessage(Command.MESSAGE_PASS, socket).sendToTarget();
+                } else if (data.equalsIgnoreCase(Command.STOP_PREVIEW)) {
+                    handler.obtainMessage(Command.MESSAGE_STOP_PREVIEW).sendToTarget();
                 }
             } catch (EOFException e) {
                 e.printStackTrace();

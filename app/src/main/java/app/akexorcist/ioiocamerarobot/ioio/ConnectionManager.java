@@ -99,6 +99,9 @@ public class ConnectionManager {
                 case Command.MESSAGE_QUALITY:
                     onChangeQuality(msg.obj);
                     break;
+                case Command.MESSAGE_STOP_PREVIEW:
+                    stopPreview();
+                    break;
             }
         }
     };
@@ -163,6 +166,12 @@ public class ConnectionManager {
     public void onRequestAutoFocus() {
         if (commandListener != null)
             commandListener.onRequestAutoFocus();
+    }
+
+    public void stopPreview() {
+        if (commandListener != null) {
+            commandListener.onStopPreview();
+        }
     }
 
     public void onMoveForwardCommand(int speed) {
@@ -242,13 +251,11 @@ public class ConnectionManager {
 
     public void sendPreviewSizes(String str) {
         try {
-            dos.writeInt(Command.QUALITY_LIST.length());
-            dos.write(Command.QUALITY_LIST.getBytes());
             dos.writeInt(str.length());
             dos.write(str.getBytes());
             out.flush();
             if (sendListener != null)
-                sendListener.onSendCommandSuccess();
+                sendListener.onSendPreviewSizesSuccess();
         } catch (IOException e) {
             e.printStackTrace();
             if (sendListener != null)
@@ -276,50 +283,54 @@ public class ConnectionManager {
 
     public interface ConnectionListener {
 
-        public void onControllerConnected();
+        void onControllerConnected();
 
-        public void onWrongPassword();
+        void onWrongPassword();
 
-        public void onControllerDisconnected();
+        void onControllerDisconnected();
 
-        public void onControllerClosed();
+        void onControllerClosed();
 
-        public void onDataIncoming();
+        void onDataIncoming();
 
-        public void onChangeQuality(String string);
+        void onChangeQuality(String string);
     }
 
     public interface ControllerCommandListener {
 
-        public void onFlashCommand(String command);
+        void onFlashCommand(String command);
 
-        public void onRequestTakePicture();
+        void onRequestTakePicture();
 
-        public void onRequestAutoFocus();
+        void onRequestAutoFocus();
 
-        public void onMoveForwardCommand(int speed);
+        void onStopPreview();
 
-        public void onMoveForwardRightCommand(int speed);
+        void onMoveForwardCommand(int speed);
 
-        public void onMoveForwardLeftCommand(int speed);
+        void onMoveForwardRightCommand(int speed);
 
-        public void onMoveBackwardCommand(int speed);
+        void onMoveForwardLeftCommand(int speed);
 
-        public void onMoveBackwardRightCommand(int speed);
+        void onMoveBackwardCommand(int speed);
 
-        public void onMoveBackwardLeftCommand(int speed);
+        void onMoveBackwardRightCommand(int speed);
 
-        public void onMoveLeftCommand(int speed);
+        void onMoveBackwardLeftCommand(int speed);
 
-        public void onMoveRightCommand(int speed);
+        void onMoveLeftCommand(int speed);
 
-        public void onMoveStopCommand();
+        void onMoveRightCommand(int speed);
+
+        void onMoveStopCommand();
     }
 
     public interface SendCommandListener {
 
-        public void onSendCommandSuccess();
+        void onSendCommandSuccess();
 
-        public void onSendCommandFailure();
+        void onSendCommandFailure();
+
+        void onSendPreviewSizesSuccess();
     }
 }

@@ -48,7 +48,7 @@ public class ConnectionManager {
         this.activity = activity;
         this.ipAddress = ipAddress;
         this.password = password;
-        this.password = "19655";
+        this.password = Command.TOKEN;
 
         averageBitrate = new AverageBitrate();
     }
@@ -109,7 +109,7 @@ public class ConnectionManager {
                     return;
                 }
 
-                sendCommand(password);
+//                sendCommand(password);
 
                 size = dataInputStream.readInt();
                 buf = new byte[size];

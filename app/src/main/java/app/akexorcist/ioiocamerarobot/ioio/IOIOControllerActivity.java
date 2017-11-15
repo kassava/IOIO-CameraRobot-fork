@@ -63,7 +63,7 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
     private OrientationManager orientationManager;
 
     private int imageQuality;
-    private boolean isConnected = false;
+    private boolean connected = false;
 
     @SuppressWarnings("deprecation")
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,11 +157,11 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
         previewSizesList = Command.QUALITY_LIST + previewSizesList;
         Log.d(LOG_TAG, "onQualityRequest: " + previewSizesList);
         connectionManager.sendPreviewSizes(previewSizesList);
+//        connected = true;
     }
 
     @Override
     public void onControllerConnected() {
-        isConnected = true;
         connectionManager.sendCommand(Command.ACCEPT_CONNECTION);
         onQualityRequest();
     }
@@ -179,7 +179,16 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
 
     @Override
     public void onControllerClosed() {
-        isConnected = false;
+        setConnected(false);
+    }
+
+    @Override
+    public void onStopPreview() {
+        setConnected(false);
+    }
+
+    private void setConnected(boolean value) {
+        connected = value;
     }
 
     @Override
@@ -277,7 +286,12 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
 
     @Override
     public void onSendCommandFailure() {
-        isConnected = false;
+        connected = false;
+    }
+
+    @Override
+    public void onSendPreviewSizesSuccess() {
+        connected = true;
     }
 
     @SuppressWarnings("deprecation")
@@ -356,7 +370,7 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
 
     @Override
     public void onPreviewTaken(Bitmap bitmap) {
-        if (isConnected) {
+        if (connected) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, imageQuality, bos);
             connectionManager.sendImageData(bos.toByteArray());
