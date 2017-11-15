@@ -1,5 +1,6 @@
 package app.akexorcist.ioiocamerarobot.ioio;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
@@ -25,27 +26,45 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.ivbaranov.rxbluetooth.RxBluetooth;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+
 import org.json.JSONArray;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import app.akexorcist.ioiocamerarobot.App;
 import app.akexorcist.ioiocamerarobot.R;
 import app.akexorcist.ioiocamerarobot.constant.ExtraKey;
+import app.akexorcist.ioiocamerarobot.service.BluetoothService;
+import app.akexorcist.ioiocamerarobot.service.LocationService;
+import app.akexorcist.ioiocamerarobot.service.SensorService;
 
 public class IOIOSetupActivity extends Activity implements OnClickListener, OnSeekBarChangeListener {
-
+    @Inject
+    RxBluetooth rxBluetooth;
     private TextView tvImageQuality;
     private EditText etIpAddress;
     private SeekBar sbImageQuality;
     private Button btnOk;
     private Button btnPreviewSizeChooser;
     private ArrayList<String> previewSizeList;
+    private int REQUEST_ENABLE_BT = 50;
 
     private int selectedSizePosition;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        App.getAppComponent().inject(this);
+        preparationApp();
+        startServices();
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         setContentView(R.layout.activity_ioio_setup);
 
@@ -75,6 +94,51 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
         btnOk.setOnClickListener(this);
     }
 
+    private void preparationApp() {
+        Dexter.withActivity(this)
+                .withPermissions(
+                        Manifest.permission.CAMERA,
+                        Manifest.permission.BLUETOOTH,
+                        Manifest.permission.BLUETOOTH_ADMIN,
+                        Manifest.permission.ACCESS_WIFI_STATE,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.INTERNET,
+                        Manifest.permission.ACCESS_NETWORK_STATE,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                ).withListener(new MultiplePermissionsListener() {
+            @Override
+            public void onPermissionsChecked(MultiplePermissionsReport report) {/* ... */}
+
+            @Override
+            public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {/* ... */}
+        }).check();
+
+        if (rxBluetooth.isBluetoothAvailable()) {
+            // handle the lack of bluetooth support
+            if (!rxBluetooth.isBluetoothEnabled()) {
+                // to enable bluetooth via startActivityForResult()
+                rxBluetooth.enableBluetooth(this, REQUEST_ENABLE_BT);
+                Toast.makeText(this, "Bluetooth enable", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            // check if bluetooth is currently enabled and ready for use
+            Toast.makeText(this, "Bluetooth unavailable", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void startServices(){
+        startService(new Intent(this, SensorService.class));
+        startService(new Intent(this, LocationService.class));
+        startService(new Intent(this, BluetoothService.class));
+    }
+
+    @Override
+    public void onDestroy() {
+        stopService(new Intent(this, SensorService.class));
+        stopService(new Intent(this, LocationService.class));
+        stopService(new Intent(this, BluetoothService.class));
+        super.onDestroy();
+    }
     @Override
     public void onClick(View v) {
         int id = v.getId();

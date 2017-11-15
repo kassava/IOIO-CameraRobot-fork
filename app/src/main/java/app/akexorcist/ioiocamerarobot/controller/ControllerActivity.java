@@ -163,6 +163,7 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
 
     @Override
     protected void onDestroy() {
+        connectionManager.stop();
         mapView.onDestroy();
         super.onDestroy();
     }
@@ -332,11 +333,13 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     @Override
     public void onConnectionDown() {
         showToast(getString(R.string.connection_down));
+        connectionManager.stop();
         finish();
     }
 
     @Override
     public void onConnectionFailed() {
+        connectionManager.stop();
         showToast(getString(R.string.connection_failed));
 //        finish();
     }

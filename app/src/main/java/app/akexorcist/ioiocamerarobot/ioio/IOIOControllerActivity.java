@@ -19,15 +19,23 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.michaelflisar.rxbus.RXBusBuilder;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.ByteArrayOutputStream;
 
+import javax.inject.Inject;
+
+import app.akexorcist.ioiocamerarobot.App;
 import app.akexorcist.ioiocamerarobot.R;
 import app.akexorcist.ioiocamerarobot.constant.Command;
 import app.akexorcist.ioiocamerarobot.constant.DirectionState;
 import app.akexorcist.ioiocamerarobot.constant.ExtraKey;
+import app.akexorcist.ioiocamerarobot.model.Location;
+import app.akexorcist.ioiocamerarobot.model.OrientationValue;
 import app.akexorcist.ioiocamerarobot.utils.Utilities;
 import ioio.lib.api.DigitalOutput;
 import ioio.lib.api.PwmOutput;
@@ -35,10 +43,16 @@ import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.BaseIOIOLooper;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
+import rx.Subscription;
+import rx.functions.Action1;
+
+import static android.content.ContentValues.TAG;
 
 
 public class IOIOControllerActivity extends IOIOActivity implements CameraManager.CameraManagerListener, Callback, ConnectionManager.ConnectionListener, ConnectionManager.ControllerCommandListener, ConnectionManager.SendCommandListener {
-    
+    @Inject
+    Gson gson;
+
     private static final int TAKE_PICTURE_COOLDOWN = 1000;
     private final String LOG_TAG = IOIOControllerActivity.class.getSimpleName();
     private RelativeLayout layoutParent;
@@ -53,7 +67,8 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
     private Button btnMoveRight;
     private Button btnMoveLeft;
     private SurfaceView surfacePreview;
-
+    private Subscription subscriptionOrientation;
+    private Subscription subscriptionLocation;
     private int movementSpeed = 0;
     private int lastPictureTakenTime = 0;
     private int directionState = DirectionState.STOP;
@@ -68,6 +83,8 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
     @SuppressWarnings("deprecation")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        App.getAppComponent().inject(this);
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_ioio);
 
@@ -113,8 +130,20 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
 
     public void onStop() {
         super.onStop();
+        if (subscriptionLocation != null)
+            subscriptionLocation.unsubscribe();
+        if (subscriptionOrientation != null)
+            subscriptionOrientation.unsubscribe();
         connectionManager.stop();
         finish();
+    }
+
+    @Override
+    public void onDestroy() {
+        // unsubscribe - we used the RXSubscriptionManager for every subscription and bound all subscriptions to this class,
+        // so following will safely unsubscribe every subscription
+//        subscriptionManual.unsubscribe();
+        super.onDestroy();
     }
 
     public void clearCheckBox() {
@@ -164,6 +193,22 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
     public void onControllerConnected() {
         connectionManager.sendCommand(Command.ACCEPT_CONNECTION);
         onQualityRequest();
+        subscriptionOrientation = RXBusBuilder.create(OrientationValue.class)
+                .subscribe(new Action1<OrientationValue>() {
+                    @Override
+                    public void call(OrientationValue s) {
+                        Log.d(TAG, "orientation" + s.getValue().toString() + " " + gson.toJson(s));
+                        connectionManager.sendOrientation(gson.toJson(s));
+                    }
+                });
+        subscriptionLocation = RXBusBuilder.create(Location.class)
+                .subscribe(new Action1<Location>() {
+                    @Override
+                    public void call(Location s) {
+                        Log.d(TAG, "location" + gson.toJson(s));
+                        connectionManager.sendLocation(gson.toJson(s));
+                    }
+                });
     }
 
     @Override
@@ -292,6 +337,17 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
     @Override
     public void onSendPreviewSizesSuccess() {
         connected = true;
+    }
+
+
+    @Override
+    public void onSendTelemetry() {
+
+    }
+
+    @Override
+    public void onSendTelemetryFailure() {
+
     }
 
     @SuppressWarnings("deprecation")

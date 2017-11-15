@@ -2,18 +2,21 @@ package app.akexorcist.ioiocamerarobot.ioio;
 
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import app.akexorcist.ioiocamerarobot.constant.AppConstants;
 import app.akexorcist.ioiocamerarobot.constant.Command;
 
 /**
  * Created by Akexorcist on 9/5/15 AD.
  */
 public class ConnectionManager {
+    private static final String LOG_TAG = ConnectionManager.class.getSimpleName();
 
     private ConnectionListener connectionListener;
     private ControllerCommandListener commandListener;
@@ -281,6 +284,44 @@ public class ConnectionManager {
         }
     }
 
+    public void sendLocation(String str) {
+        try {
+            Log.d(LOG_TAG, "telemetry: " + str );
+            dos.writeInt(Command.LOCATION.length());
+            dos.write(Command.LOCATION.getBytes());
+            dos.writeInt(str.length());
+            dos.write(str.getBytes());
+            out.flush();
+            if (sendListener != null)
+                sendListener.onSendTelemetry();
+        } catch (IOException e) {
+            e.printStackTrace();
+            if (sendListener != null)
+                sendListener.onSendTelemetryFailure();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendOrientation(String str) {
+        try {
+            Log.d(LOG_TAG, "telemetry: " + str );
+            dos.writeInt(Command.ORIENTATION.length());
+            dos.write(Command.ORIENTATION.getBytes());
+            dos.writeInt(str.length());
+            dos.write(str.getBytes());
+            out.flush();
+            if (sendListener != null)
+                sendListener.onSendTelemetry();
+        } catch (IOException e) {
+            e.printStackTrace();
+            if (sendListener != null)
+                sendListener.onSendTelemetryFailure();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+    }
+
     public interface ConnectionListener {
 
         void onControllerConnected();
@@ -332,5 +373,9 @@ public class ConnectionManager {
         void onSendCommandFailure();
 
         void onSendPreviewSizesSuccess();
+
+        void onSendTelemetry();
+
+        void onSendTelemetryFailure();
     }
 }

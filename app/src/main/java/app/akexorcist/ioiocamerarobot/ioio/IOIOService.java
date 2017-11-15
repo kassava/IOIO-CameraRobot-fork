@@ -28,7 +28,6 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
     private static final int TIMEOUT = 3000;
 
     private boolean isTaskRunning = true;
-    private ServerSocket serverSocket;
     private Socket socket;
     private String ipAddress;
 
@@ -103,20 +102,6 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
         new Thread(run).start();
 
         try {
-//            serverSocket = new ServerSocket(PORT);
-//            serverSocket.setSoTimeout(TIMEOUT);
-//            Log.i(LOG_TAG, "Waiting for connect");
-//            while (socket == null && isTaskRunning) {
-//                try {
-//                    socket = serverSocket.accept();
-//                    socket.setSoTimeout(TIMEOUT);
-//                } catch (InterruptedIOException e) {
-//                    Log.i(LOG_TAG, "Waiting for connect");
-//                } catch (SocketException e) {
-//                   e.printStackTrace();
-//                }
-//            }
-
             while (socket == null && isTaskRunning) {
                 try {
                     socket = new Socket();
@@ -130,15 +115,6 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
             if (isTaskRunning) {
                 inputStream = socket.getInputStream();
                 dataInputStream = new DataInputStream(inputStream);
-//                int size = dataInputStream.readInt();
-//                byte[] buffer = new byte[size];
-//                String str = new String(buffer);
-//                dataInputStream.readFully(buffer);
-//                if ((new String(buffer)).equalsIgnoreCase(Command.TOKEN)) {
-//                    handler.obtainMessage(Command.MESSAGE_PASS, socket).sendToTarget();
-//                } else {
-//                    handler.obtainMessage(Command.MESSAGE_WRONG, socket).sendToTarget();
-//                }
             }
 
         } catch (IOException e) {
@@ -171,6 +147,7 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
                 handler.obtainMessage(Command.MESSAGE_CLOSE).sendToTarget();
                 break;
             } catch (IOException e) {
+                e.printStackTrace();
             }
 
             if (!socket.isConnected()) {
@@ -178,7 +155,6 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
             }
         }
         try {
-            serverSocket.close();
             socket.close();
             inputStream.close();
             dataInputStream.close();
@@ -189,7 +165,7 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
         return null;
     }
 
-    public void killTask() {
+    void killTask() {
         isTaskRunning = false;
 
         try {

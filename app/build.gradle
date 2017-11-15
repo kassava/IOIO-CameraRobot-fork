@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'me.tatarka.retrolambda'
 
 android {
     compileSdkVersion 27
@@ -6,7 +7,7 @@ android {
 
     defaultConfig {
         applicationId "app.akexorcist.ioiocamerarobot"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 27
     }
 
@@ -19,12 +20,40 @@ android {
 }
 
 dependencies {
-    implementation 'com.android.support:support-v4:27.0.0'
+    implementation 'com.android.support:support-v4:27.0.1'
     implementation 'com.github.ytai.ioio:IOIOLibAndroid:5.05'
     implementation 'com.github.ytai.ioio:IOIOLibAndroidBluetooth:5.05'
-    implementation 'com.android.support:design:27.0.0'
-    implementation 'com.android.support:appcompat-v7:27.0.0'
+    implementation 'com.android.support:design:27.0.1'
+    implementation 'com.android.support:appcompat-v7:27.0.1'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     implementation 'com.github.clans:fab:1.6.4'
     implementation 'com.google.android.gms:play-services-maps:11.6.0'
+
+    //binding
+    compile 'com.jakewharton:butterknife:8.8.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+    //dagger
+    compile 'com.google.dagger:dagger-android:2.11'
+    compile 'com.google.dagger:dagger-android-support:2.11' // if you use the support libraries
+    annotationProcessor 'com.google.dagger:dagger-android-processor:2.11'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.11'
+
+    // rx
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+// Because RxAndroid releases are few and far between, it is recommended you also
+// explicitly depend on RxJava's latest version for bug fixes and new features.
+    compile 'io.reactivex.rxjava2:rxjava:2.1.6'
+    compile 'com.github.MFlisar:RXBus:1.0'
+    compile 'com.google.code.gson:gson:2.8.2'
+
+    //bluetooth
+    compile 'com.github.ivbaranov:rxbluetooth2:2.0.0-SNAPSHOT'
+
+    //sensors&location
+    compile 'com.getwandup:rxsensor:1.0.1'
+    compile 'com.github.quentin7b:android-location-tracker:3.2'
+
+    //permission
+    compile 'com.karumi:dexter:4.2.0'
+
 }

@@ -5,6 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -18,17 +20,23 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import javax.inject.Inject;
+
+import app.akexorcist.ioiocamerarobot.App;
 import app.akexorcist.ioiocamerarobot.constant.Command;
+import app.akexorcist.ioiocamerarobot.model.OrientationValue;
 import app.akexorcist.ioiocamerarobot.utils.AverageBitrate;
 
 /**
  * Created by Akexorcist on 9/5/15 AD.
  */
 public class ConnectionManager {
+    @Inject
+    Gson gson;
 
     private static final int PORT = 10083;
     private static final int TIMEOUT = 5000;
-    private static final String LOG_TAG = "Controller" + ConnectionManager.class.getSimpleName();
+    private static final String LOG_TAG = ConnectionManager.class.getSimpleName();
     private Activity activity;
     private ConnectionListener connectionListener;
     private IOIOResponseListener responseListener;
@@ -45,6 +53,8 @@ public class ConnectionManager {
     private AverageBitrate averageBitrate;
 
     public ConnectionManager(Activity activity, String ipAddress, String password) {
+        App.getAppComponent().inject(this);
+
         this.activity = activity;
         this.ipAddress = ipAddress;
         this.password = password;
@@ -108,9 +118,6 @@ public class ConnectionManager {
                     });
                     return;
                 }
-
-//                sendCommand(password);
-
                 size = dataInputStream.readInt();
                 buf = new byte[size];
                 dataInputStream.readFully(buf);
@@ -128,7 +135,7 @@ public class ConnectionManager {
                 buf = new byte[size];
                 dataInputStream.readFully(buf);
                 String qualityStr = new String(buf);
-                if (qualityStr.startsWith(Command.QUALITY_LIST)){
+                if (qualityStr.startsWith(Command.QUALITY_LIST)) {
                     responseListener.onPreviewSizesResponse(qualityStr
                             .substring(Command.QUALITY_LIST.length()));
                 }
@@ -147,22 +154,31 @@ public class ConnectionManager {
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                String message = new String(buffer);
                                 if (buffer.length > 0 && buffer.length < 20) {
-                                    if (new String(buffer).equalsIgnoreCase(Command.SNAP)) {
+                                    if (message.equalsIgnoreCase(Command.SNAP)) {
                                         if (responseListener != null)
                                             responseListener.onPictureTaken();
-                                    } else if (new String(buffer).equalsIgnoreCase(Command.WRONG_PASSWORD)) {
+                                    } else if (message.equalsIgnoreCase(Command.WRONG_PASSWORD)) {
                                         if (connectionListener != null)
                                             connectionListener.onWrongPassword();
-                                    } else if (new String(buffer).equalsIgnoreCase(Command.ACCEPT_CONNECTION)) {
+                                    } else if (message.equalsIgnoreCase(Command.ACCEPT_CONNECTION)) {
                                         if (connectionListener != null)
                                             connectionListener.onIOIOConnected();
-                                    } else if (new String(buffer).equalsIgnoreCase(Command.FLASH_UNAVAILABLE)) {
+                                    } else if (message.equalsIgnoreCase(Command.FLASH_UNAVAILABLE)) {
                                         if (responseListener != null)
                                             responseListener.onFlashUnavailable();
                                     }
                                 } else if (buffer.length > 20) {
-                                    if (responseListener != null) {
+                                    if (new String(buffer).startsWith(Command.ORIENTATION))
+                                        Log.d(LOG_TAG, "Orientation" + message.substring(6, message.length()));
+//                                                gson.fromJson(message.substring(6, message.length()), OrientationValue.class).toString();
+                                    else if (new String(buffer).startsWith(Command.LOCATION)){
+                                        Log.d(LOG_TAG, "Location" + message.substring(3, message.length()));
+                                               OrientationValue orientationValue =  gson.fromJson(message.substring(3, message.length()), OrientationValue.class);
+                                        Log.d(LOG_TAG, "Location" + orientationValue.getValue());
+                                    }
+                                    else if (responseListener != null) {
                                         averageBitrate.push(buffer.length);
                                         Bitmap bitmap = BitmapFactory.decodeByteArray(buffer, 0, buffer.length);
                                         responseListener.onCameraImageIncoming(bitmap);

@@ -183,10 +183,12 @@ public class CameraManager implements Camera.PictureCallback, Camera.PreviewCall
     }
 
     public void destroyCameraInstance() {
-        mCamera.setPreviewCallback(null);
-        mCamera.stopPreview();
-        mCamera.release();
-        mCamera = null;
+        if (mCamera != null) {
+            mCamera.setPreviewCallback(null);
+            mCamera.stopPreview();
+            mCamera.release();
+            mCamera = null;
+        }
     }
 
     public interface CameraManagerListener {
@@ -199,8 +201,13 @@ public class CameraManager implements Camera.PictureCallback, Camera.PreviewCall
     }
 
     public void requestAutoFocus() {
-        if (mCamera != null)
-            mCamera.autoFocus(null);
+        try {
+            if (mCamera != null)
+                mCamera.autoFocus(null);
+        } catch (RuntimeException e) {
+            System.out.print(e);
+        }
+
     }
 
     public boolean requestTakePicture() {
