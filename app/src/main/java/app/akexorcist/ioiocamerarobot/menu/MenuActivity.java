@@ -214,7 +214,7 @@ public class MenuActivity extends Activity implements OnClickListener, SeekBar.O
             intent.putExtra(ExtraKey.QUALITY, sbImageQuality.getProgress());
             startActivity(intent);
         } else {
-            showToast(getString(R.string.password_is_required));
+            showToast(getString(R.string.ip_address_unavailable));
         }
 
     }

@@ -8,7 +8,7 @@
     <string name="image_resolution">Разрешение изображения</string>
     <string name="image_quality">Качество изображения %1$s %%</string>
     <string name="movement_speed">Speed %1$s</string>
-    <string name="password_is_required">Password is required.</string>
+    <string name="ip_address_unavailable">Ip address unavailable.</string>
     <string name="unavailable_flash_mode">Unavailable Flash Mode.</string>
     <string name="unsupport_flash">Device not support flash</string>
     <string name="out_of_memory">Out of memory. Please decrease image quality and preview size.</string>

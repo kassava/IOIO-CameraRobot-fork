@@ -188,7 +188,7 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
             saveIpAddress(strIpAddress);
             goToIOIOController();
         } else {
-            showToast(getString(R.string.password_is_required));
+            showToast(getString(R.string.ip_address_unavailable));
         }
     }
 
