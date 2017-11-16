@@ -37,7 +37,7 @@ public class AppModule {
 
     @Provides
     public Gson provideGson() {
-        return gson = new Gson();
+        return new Gson();
     }
 
     @Provides

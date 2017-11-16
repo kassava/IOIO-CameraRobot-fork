@@ -186,7 +186,6 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
         previewSizesList = Command.QUALITY_LIST + previewSizesList;
         Log.d(LOG_TAG, "onQualityRequest: " + previewSizesList);
         connectionManager.sendPreviewSizes(previewSizesList);
-//        connected = true;
     }
 
     @Override
@@ -198,7 +197,7 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
                     @Override
                     public void call(OrientationValue s) {
                         Log.d(TAG, "orientation" + s.getValue().toString() + " " + gson.toJson(s));
-                        connectionManager.sendOrientation(gson.toJson(s));
+                        connectionManager.sendCommand(Command.ORIENTATION + gson.toJson(s));
                     }
                 });
         subscriptionLocation = RXBusBuilder.create(Location.class)
@@ -206,7 +205,7 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
                     @Override
                     public void call(Location s) {
                         Log.d(TAG, "location" + gson.toJson(s));
-                        connectionManager.sendLocation(gson.toJson(s));
+                        connectionManager.sendCommand(Command.LOCATION + gson.toJson(s));
                     }
                 });
     }
