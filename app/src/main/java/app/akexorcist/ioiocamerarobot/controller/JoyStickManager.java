@@ -61,6 +61,7 @@ public class JoyStickManager implements View.OnTouchListener {
         int speed = (int) (joystick.getDistance() / 1.875) + 20;
         speed = (speed > 100) ? 100 : speed;
         speed = (speed < 0) ? 0 : speed;
+        speed *= 2.55;
 
         if (listener != null) {
             if (direction == JoyStickView.STICK_UP) {

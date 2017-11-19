@@ -58,7 +58,7 @@ public class SensorService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         rxAccelerometerSensor = new RxSensor(this);
-        rxAccelerometerSensor.observe(Sensor.TYPE_ACCELEROMETER, SensorManager.SENSOR_DELAY_NORMAL)
+        rxAccelerometerSensor.observe(Sensor.TYPE_ACCELEROMETER, SensorManager.SENSOR_DELAY_UI)
                 .subscribe(new Subscriber<RxSensorEvent>() {
                     @Override
                     public void onCompleted() { }
@@ -70,11 +70,10 @@ public class SensorService extends Service {
                     public void onNext(RxSensorEvent sensorEvent) {
                         setAccelerometerValues(sensorEvent.values);
                         RXBus.get().sendEvent(new OrientationValue(calculateOrientation()));
-//                        eventBus.getDefault().post(new OrientationValue(calculateOrientation()));
                     }
                 });
         rxMagneticSensor = new RxSensor(this);
-        rxMagneticSensor.observe(Sensor.TYPE_MAGNETIC_FIELD, SensorManager.SENSOR_DELAY_NORMAL)
+        rxMagneticSensor.observe(Sensor.TYPE_MAGNETIC_FIELD, SensorManager.SENSOR_DELAY_UI)
                 .subscribe(new Subscriber<RxSensorEvent>() {
                     @Override
                     public void onCompleted() { }
@@ -86,7 +85,6 @@ public class SensorService extends Service {
                     public void onNext(RxSensorEvent sensorEvent) {
                         setMagneticValues(sensorEvent.values);
                         RXBus.get().sendEvent(new OrientationValue(calculateOrientation()));
-//                        eventBus.getDefault().post(new OrientationValue(calculateOrientation()));
                     }
                 });
         return START_STICKY;

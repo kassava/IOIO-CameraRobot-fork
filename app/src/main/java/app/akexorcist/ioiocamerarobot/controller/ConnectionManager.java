@@ -24,6 +24,7 @@ import javax.inject.Inject;
 
 import app.akexorcist.ioiocamerarobot.App;
 import app.akexorcist.ioiocamerarobot.constant.Command;
+import app.akexorcist.ioiocamerarobot.model.Location;
 import app.akexorcist.ioiocamerarobot.model.OrientationValue;
 import app.akexorcist.ioiocamerarobot.utils.AverageBitrate;
 
@@ -170,13 +171,23 @@ public class ConnectionManager {
                                             responseListener.onFlashUnavailable();
                                     }
                                 } else if (buffer.length > 20) {
-                                    if (new String(buffer).startsWith(Command.ORIENTATION))
-                                        Log.d(LOG_TAG, "Orientation" + message.substring(6, message.length()));
-//                                                gson.fromJson(message.substring(6, message.length()), OrientationValue.class).toString();
-                                    else if (new String(buffer).startsWith(Command.LOCATION)){
-                                        Log.d(LOG_TAG, "Location" + message.substring(3, message.length()));
-                                               OrientationValue orientationValue =  gson.fromJson(message.substring(3, message.length()), OrientationValue.class);
-                                        Log.d(LOG_TAG, "Location" + orientationValue.getValue());
+                                    if (new String(buffer).startsWith(Command.ORIENTATION)) {
+//                                        Log.d(LOG_TAG, "Orientation: " + message
+//                                                .substring(Command.ORIENTATION.length()));
+                                        OrientationValue orientationValue = gson.fromJson(message
+                                                .substring(Command.ORIENTATION.length()),
+                                                OrientationValue.class);
+                                        responseListener.onOrientationIncoming(orientationValue);
+                                    }
+                                    else if (new String(buffer).startsWith(Command.LOCATION)) {
+                                        Log.d(LOG_TAG, "Location: " + message
+                                                .substring(Command.LOCATION.length()));
+                                               Location location =  gson
+                                                       .fromJson(message
+                                                               .substring(Command.LOCATION.length()),
+                                                               Location.class);
+                                               responseListener.onLocationIncoming(location);
+                                        Log.d(LOG_TAG, "Location: " + location);
                                     }
                                     else if (responseListener != null) {
                                         averageBitrate.push(buffer.length);
@@ -187,7 +198,7 @@ public class ConnectionManager {
                             }
                         });
                     } catch (EOFException e) {
-                        e.printStackTrace();
+//                        e.printStackTrace();
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -201,9 +212,9 @@ public class ConnectionManager {
                     }
                 }
             } catch (NumberFormatException | UnknownHostException e) {
-                e.printStackTrace();
+//                e.printStackTrace();
             } catch (IOException e) {
-                e.printStackTrace();
+//                e.printStackTrace();
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -236,6 +247,10 @@ public class ConnectionManager {
 
         void onCameraImageIncoming(Bitmap bitmap);
 
+        void onLocationIncoming(Location location);
+
+        void onOrientationIncoming(OrientationValue value);
+
         void onPreviewSizesResponse(String previewSizesStr);
     }
 
@@ -265,6 +280,7 @@ public class ConnectionManager {
         new Thread(new Runnable() {
             public void run() {
                 try {
+                    Log.d(LOG_TAG, "send movement: " + str);
                     byte[] data = str.getBytes();
                     DatagramSocket datagramSocket = new DatagramSocket();
                     InetAddress inetAddress = InetAddress.getByName(ipAddress);

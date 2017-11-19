@@ -20,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.michaelflisar.rxbus.RXBus;
 import com.michaelflisar.rxbus.RXBusBuilder;
 
 import org.json.JSONArray;
@@ -180,6 +181,13 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
         }
     }
 
+    @Override
+    public void onMoveCommandIncoming(String command) {
+        Log.d(LOG_TAG, "Incoming command: " + command);
+
+        RXBus.get().sendEvent(command);
+    }
+
     public void onQualityRequest() {
         SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
         String previewSizesList = settings.getString(ExtraKey.PREVIEW_SIZE_SET, "");
@@ -196,7 +204,7 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
                 .subscribe(new Action1<OrientationValue>() {
                     @Override
                     public void call(OrientationValue s) {
-                        Log.d(TAG, "orientation" + s.getValue().toString() + " " + gson.toJson(s));
+//                        Log.d(TAG, "orientation" + s.getValue().toString() + " " + gson.toJson(s));
                         connectionManager.sendCommand(Command.ORIENTATION + gson.toJson(s));
                     }
                 });

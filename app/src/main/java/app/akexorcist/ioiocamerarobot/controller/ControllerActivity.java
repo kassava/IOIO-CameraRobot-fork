@@ -26,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -41,6 +42,8 @@ import java.util.List;
 import app.akexorcist.ioiocamerarobot.R;
 import app.akexorcist.ioiocamerarobot.constant.Command;
 import app.akexorcist.ioiocamerarobot.constant.ExtraKey;
+import app.akexorcist.ioiocamerarobot.model.Location;
+import app.akexorcist.ioiocamerarobot.model.OrientationValue;
 import app.akexorcist.ioiocamerarobot.utils.CompassView;
 
 public class ControllerActivity extends Activity implements ConnectionManager.IOIOResponseListener,
@@ -71,6 +74,8 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     private Button btnPreviewSizeChooser;
     private TextView textView;
     private SeekBar sbImageQuality;
+
+    private GoogleMap map;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -152,7 +157,8 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
 
     @Override
     public void onMapReady(GoogleMap map) {
-        map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+        this.map = map;
+        this.map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
     }
 
     @Override
@@ -316,6 +322,23 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     }
 
     @Override
+    public void onLocationIncoming(Location location) {
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        map.addMarker(new MarkerOptions().position(latLng).title("Marker"));
+        map.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+    }
+
+    @Override
+    public void onOrientationIncoming(OrientationValue value) {
+        if (compassView != null) {
+            compassView.setBearing(value.getValue()[0]);
+            compassView.setPitch(value.getValue()[1]);
+            compassView.setRoll(-value.getValue()[2]);
+            compassView.invalidate();
+        }
+    }
+
+    @Override
     public void onPreviewSizesResponse(String previewSizesStr) {
         try {
             Log.d(LOG_TAG, "onPreviewSizesResponse: " + previewSizesStr);
@@ -397,48 +420,48 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
 
     @Override
     public void onJoyStickUp(int speed) {
-        connectionManager.sendMovement(Command.FORWARD + speed);
+        connectionManager.sendMovement(Command.FORWARD + ";" + speed);
     }
 
     @Override
     public void onJoyStickUpRight(int speed) {
-        connectionManager.sendMovement(Command.FORWARD_RIGHT + speed);
+        connectionManager.sendMovement(Command.FORWARD_RIGHT + ";" + speed);
     }
 
     @Override
     public void onJoyStickUpLeft(int speed) {
-        connectionManager.sendMovement(Command.FORWARD_LEFT + speed);
+        connectionManager.sendMovement(Command.FORWARD_LEFT + ";" + speed);
     }
 
     @Override
     public void onJoyStickDown(int speed) {
-        connectionManager.sendMovement(Command.BACKWARD + speed);
+        connectionManager.sendMovement(Command.BACKWARD + ";" + speed);
     }
 
     @Override
     public void onJoyStickDownRight(int speed) {
-        connectionManager.sendMovement(Command.BACKWARD_RIGHT + speed);
+        connectionManager.sendMovement(Command.BACKWARD_RIGHT + ";" + speed);
     }
 
     @Override
     public void onJoyStickDownLeft(int speed) {
-        connectionManager.sendMovement(Command.BACKWARD_LEFT + speed);
+        connectionManager.sendMovement(Command.BACKWARD_LEFT + ";" + speed);
     }
 
     @Override
     public void onJoyStickRight(int speed) {
-        connectionManager.sendMovement(Command.RIGHT + speed);
+        connectionManager.sendMovement(Command.RIGHT + ";" + speed);
     }
 
     @Override
     public void onJoyStickLeft(int speed) {
-        connectionManager.sendMovement(Command.LEFT + speed);
+        connectionManager.sendMovement(Command.LEFT + ";" + speed);
     }
 
     @Override
     public void onJoyStickNone() {
-        connectionManager.sendMovement(Command.STOP + "0");
-        connectionManager.sendMovement(Command.STOP + "0");
+        int speed = 0;
+        connectionManager.sendMovement(Command.STOP + ";" + speed);
     }
 
     @Override

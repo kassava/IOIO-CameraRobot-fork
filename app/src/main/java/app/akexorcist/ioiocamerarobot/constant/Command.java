@@ -42,6 +42,7 @@ public class Command {
     public static final int MESSAGE_LEFT = 17;
     public static final int MESSAGE_UPLEFT = 18;
     public static final int MESSAGE_STOP_PREVIEW = 19;
+    public static final int MOVE_COMMAND = 20;
 
     public static final String FORWARD = "UU";
     public static final String FORWARD_RIGHT = "UR";

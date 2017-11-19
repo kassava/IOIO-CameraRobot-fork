@@ -9,13 +9,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 
-import app.akexorcist.ioiocamerarobot.constant.AppConstants;
 import app.akexorcist.ioiocamerarobot.constant.Command;
 
 /**
  * Created by Akexorcist on 9/5/15 AD.
  */
 public class ConnectionManager {
+
     private static final String LOG_TAG = ConnectionManager.class.getSimpleName();
 
     private ConnectionListener connectionListener;
@@ -51,6 +51,9 @@ public class ConnectionManager {
         public void handleMessage(Message msg) {
             onDataIncoming();
             switch (msg.what) {
+                case Command.MOVE_COMMAND:
+                    onMoveCommand((String) msg.obj);
+                    break;
                 case Command.MESSAGE_PASS:
                     onControllerConnected((Socket) msg.obj);
                     break;
@@ -109,19 +112,25 @@ public class ConnectionManager {
         }
     };
 
-    public void onDataIncoming() {
+    private void onMoveCommand(String command) {
+        if (connectionListener != null) {
+            connectionListener.onMoveCommandIncoming(command);
+        }
+    }
+
+    private void onDataIncoming() {
         if (connectionListener != null)
             connectionListener.onDataIncoming();
     }
 
-    public void onChangeQuality(Object obj) {
+    private void onChangeQuality(Object obj) {
         String str  = (String) obj;
         if (connectionListener != null) {
             connectionListener.onChangeQuality(str);
         }
     }
 
-    public void onControllerConnected(Socket socket) {
+    private void onControllerConnected(Socket socket) {
         try {
             out = socket.getOutputStream();
             dos = new DataOutputStream(out);
@@ -132,7 +141,7 @@ public class ConnectionManager {
         }
     }
 
-    public void onControllerPasswordWrong(Socket socket) {
+    private void onControllerPasswordWrong(Socket socket) {
         try {
             out = socket.getOutputStream();
             dos = new DataOutputStream(out);
@@ -144,90 +153,90 @@ public class ConnectionManager {
         }
     }
 
-    public void onControllerDisconnected() {
+    private void onControllerDisconnected() {
         restart();
         if (connectionListener != null)
             connectionListener.onControllerDisconnected();
     }
 
-    public void onControllerClosed() {
+    void onControllerClosed() {
         restart();
         if (connectionListener != null)
             connectionListener.onControllerClosed();
     }
 
-    public void onFlashCommand(String command) {
+    private void onFlashCommand(String command) {
         if (commandListener != null)
             commandListener.onFlashCommand(command);
     }
 
-    public void onRequestTakePicture() {
+    private void onRequestTakePicture() {
         if (commandListener != null)
             commandListener.onRequestTakePicture();
     }
 
-    public void onRequestAutoFocus() {
+    private void onRequestAutoFocus() {
         if (commandListener != null)
             commandListener.onRequestAutoFocus();
     }
 
-    public void stopPreview() {
+    private void stopPreview() {
         if (commandListener != null) {
             commandListener.onStopPreview();
         }
     }
 
-    public void onMoveForwardCommand(int speed) {
+    private void onMoveForwardCommand(int speed) {
         if (commandListener != null)
             commandListener.onMoveForwardCommand(speed);
     }
 
-    public void onMoveForwardRightCommand(int speed) {
+    private void onMoveForwardRightCommand(int speed) {
         if (commandListener != null)
             commandListener.onMoveForwardRightCommand(speed);
     }
 
-    public void onMoveForwardLeftCommand(int speed) {
+    private void onMoveForwardLeftCommand(int speed) {
         if (commandListener != null)
             commandListener.onMoveForwardLeftCommand(speed);
     }
 
-    public void onMoveBackwardCommand(int speed) {
+    private void onMoveBackwardCommand(int speed) {
         if (commandListener != null)
             commandListener.onMoveBackwardCommand(speed);
     }
 
-    public void onMoveBackwardRightCommand(int speed) {
+    private void onMoveBackwardRightCommand(int speed) {
         if (commandListener != null)
             commandListener.onMoveBackwardRightCommand(speed);
     }
 
-    public void onMoveBackwardLeftCommand(int speed) {
+    private void onMoveBackwardLeftCommand(int speed) {
         if (commandListener != null)
             commandListener.onMoveBackwardLeftCommand(speed);
     }
 
-    public void onMoveRightCommand(int speed) {
+    private void onMoveRightCommand(int speed) {
         if (commandListener != null)
             commandListener.onMoveRightCommand(speed);
     }
 
-    public void onMoveLeftCommand(int speed) {
+    private void onMoveLeftCommand(int speed) {
         if (commandListener != null)
             commandListener.onMoveLeftCommand(speed);
     }
 
-    public void onMoveStopCommand() {
+    private void onMoveStopCommand() {
         if (commandListener != null)
             commandListener.onMoveStopCommand();
     }
 
-    public void stop() {
+    void stop() {
         if (ioio != null)
             ioio.killTask();
     }
 
-    public void restart() {
+    void restart() {
         stop();
         new Handler().postDelayed(new Runnable() {
             public void run() {
@@ -236,7 +245,7 @@ public class ConnectionManager {
         }, 1000);
     }
 
-    public void sendImageData(byte[] data) {
+    void sendImageData(byte[] data) {
         try {
             dos.writeInt(data.length);
             dos.write(data);
@@ -252,7 +261,7 @@ public class ConnectionManager {
         }
     }
 
-    public void sendPreviewSizes(String str) {
+    void sendPreviewSizes(String str) {
         try {
             dos.writeInt(str.length());
             dos.write(str.getBytes());
@@ -268,7 +277,7 @@ public class ConnectionManager {
         }
     }
 
-    public void sendCommand(String str) {
+    void sendCommand(String str) {
         try {
             dos.writeInt(str.length());
             dos.write(str.getBytes());
@@ -335,6 +344,8 @@ public class ConnectionManager {
         void onDataIncoming();
 
         void onChangeQuality(String string);
+
+        void onMoveCommandIncoming(String command);
     }
 
     public interface ControllerCommandListener {
