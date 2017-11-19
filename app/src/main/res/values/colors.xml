@@ -7,8 +7,14 @@
     <color name="light_green">#3fa992</color>
 
     <color name="indigo">#3F51B5</color>
+    <color name="blue">#0277BD</color>
+
+    <color name="light_blue">#039BE5</color>
+    <color name="text_blue">@color/blue</color>
+
     <color name="text_pink">@color/pink</color>
     <color name="yellow">#fffbd5</color>
+    <color name="gray">#E0E0E0</color>
     <color name="white">#ffffff</color>
     <color name="black">#000000</color>
     <color name="dark_tranparent">#20000000</color>

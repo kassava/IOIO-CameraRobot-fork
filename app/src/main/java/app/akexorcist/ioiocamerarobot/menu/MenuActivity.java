@@ -3,14 +3,11 @@ package app.akexorcist.ioiocamerarobot.menu;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.Toast;
 
-import com.github.ivbaranov.rxbluetooth.RxBluetooth;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -19,14 +16,9 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
+import app.akexorcist.ioiocamerarobot.R;
 import app.akexorcist.ioiocamerarobot.controller.ControllerSetupActivity;
 import app.akexorcist.ioiocamerarobot.ioio.IOIOSetupActivity;
-import app.akexorcist.ioiocamerarobot.R;
-import app.akexorcist.ioiocamerarobot.service.BluetoothService;
-import app.akexorcist.ioiocamerarobot.service.LocationService;
-import app.akexorcist.ioiocamerarobot.service.SensorService;
 
 public class MenuActivity extends Activity {
 
@@ -51,6 +43,7 @@ public class MenuActivity extends Activity {
             }
         });
     }
+
     private void preparationApp() {
         Dexter.withActivity(this)
                 .withPermissions(
