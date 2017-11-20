@@ -72,6 +72,7 @@ public class SensorService extends Service {
                         RXBus.get().sendEvent(new OrientationValue(calculateOrientation()));
                     }
                 });
+
         rxMagneticSensor = new RxSensor(this);
         rxMagneticSensor.observe(Sensor.TYPE_MAGNETIC_FIELD, SensorManager.SENSOR_DELAY_UI)
                 .subscribe(new Subscriber<RxSensorEvent>() {

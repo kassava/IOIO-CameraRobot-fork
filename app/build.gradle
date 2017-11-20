@@ -58,9 +58,13 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.2'
     //bluetooth
     implementation 'com.github.ivbaranov:rxbluetooth2:2.0.0-SNAPSHOT'
+    implementation 'io.palaima:smoothbluetooth:0.1.0'
+    // usb
+//    implementation project(':usb-serial-for-android:usbSerialForAndroid')
     //sensors&location
     implementation 'com.getwandup:rxsensor:1.0.1'
     implementation 'com.github.quentin7b:android-location-tracker:3.2'
     //permission
     implementation 'com.karumi:dexter:4.2.0'
+    implementation project(':usb-serial-for-android-v010')
 }

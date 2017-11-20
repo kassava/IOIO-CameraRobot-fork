@@ -15,7 +15,7 @@ import app.akexorcist.ioiocamerarobot.controller.ConnectionManager;
 import app.akexorcist.ioiocamerarobot.di.modules.AppModule;
 import app.akexorcist.ioiocamerarobot.di.modules.ServiceModule;
 import app.akexorcist.ioiocamerarobot.ioio.IOIOControllerActivity;
-import app.akexorcist.ioiocamerarobot.ioio.IOIOSetupActivity;
+import app.akexorcist.ioiocamerarobot.settings.SetupActivity;
 import app.akexorcist.ioiocamerarobot.service.BluetoothService;
 import app.akexorcist.ioiocamerarobot.service.SensorService;
 import dagger.Component;
@@ -35,7 +35,7 @@ public interface AppComponent {
 
 
     void inject(IOIOControllerActivity activity);
-    void inject(IOIOSetupActivity activity);
+    void inject(SetupActivity activity);
     void inject(SensorService sensorService);
     void inject(BluetoothService bluetoothService);
     void inject(ConnectionManager connectionManager);

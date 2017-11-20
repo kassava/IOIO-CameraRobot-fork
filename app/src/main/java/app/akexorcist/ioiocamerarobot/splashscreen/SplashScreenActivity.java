@@ -21,9 +21,9 @@ public class SplashScreenActivity extends Activity implements Animator.AnimatorL
 
         ivInexLogo = (ImageView) findViewById(R.id.iv_inex_logo);
         ivInexLogo.setAlpha(0f);
-
-        goToMenuActivity();
         startLogoAnimation();
+        goToMenuActivity();
+
     }
 
     public void startLogoAnimation() {

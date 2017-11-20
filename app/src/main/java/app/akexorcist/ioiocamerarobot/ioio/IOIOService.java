@@ -6,6 +6,8 @@ import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
+import com.michaelflisar.rxbus.RXBus;
+
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -57,36 +59,8 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
                             datagramSocket.setSoTimeout(TIMEOUT);
                             datagramSocket.receive(datagramPacket);
                             String text = new String(message, 0, datagramPacket.getLength());
-                            String command = text.substring(0, 2);
                             Log.d(LOG_TAG, "udp command: " + text);
-                            handler.obtainMessage(Command.MOVE_COMMAND, text).sendToTarget();
-//                            if (command.equalsIgnoreCase(Command.FORWARD)) {
-//                                int speed = Integer.parseInt(text.substring(2, text.length()));
-//                                handler.obtainMessage(Command.MESSAGE_UP, speed - 50).sendToTarget();
-//                            } else if (command.equalsIgnoreCase(Command.FORWARD_RIGHT)) {
-//                                int speed = Integer.parseInt(text.substring(2, text.length()));
-//                                handler.obtainMessage(Command.MESSAGE_UPRIGHT, speed - 50).sendToTarget();
-//                            } else if (command.equalsIgnoreCase(Command.FORWARD_LEFT)) {
-//                                int speed = Integer.parseInt(text.substring(2, text.length()));
-//                                handler.obtainMessage(Command.MESSAGE_UPLEFT, speed - 50).sendToTarget();
-//                            } else if (command.equalsIgnoreCase(Command.BACKWARD)) {
-//                                int speed = Integer.parseInt(text.substring(2, text.length()));
-//                                handler.obtainMessage(Command.MESSAGE_DOWN, speed - 50).sendToTarget();
-//                            } else if (command.equalsIgnoreCase(Command.BACKWARD_RIGHT)) {
-//                                int speed = Integer.parseInt(text.substring(2, text.length()));
-//                                handler.obtainMessage(Command.MESSAGE_DOWNRIGHT, speed - 50).sendToTarget();
-//                            } else if (command.equalsIgnoreCase(Command.BACKWARD_LEFT)) {
-//                                int speed = Integer.parseInt(text.substring(2, text.length()));
-//                                handler.obtainMessage(Command.MESSAGE_DOWNLEFT, speed - 50).sendToTarget();
-//                            } else if (command.equalsIgnoreCase(Command.RIGHT)) {
-//                                int speed = Integer.parseInt(text.substring(2, text.length()));
-//                                handler.obtainMessage(Command.MESSAGE_RIGHT, speed - 50).sendToTarget();
-//                            } else if (command.equalsIgnoreCase(Command.LEFT)) {
-//                                int speed = Integer.parseInt(text.substring(2, text.length()));
-//                                handler.obtainMessage(Command.MESSAGE_LEFT, speed - 50).sendToTarget();
-//                            } else if (command.equalsIgnoreCase(Command.STOP)) {
-//                                handler.obtainMessage(Command.MESSAGE_STOP).sendToTarget();
-//                            }
+                            RXBus.get().sendEvent(text);
                         } catch (SocketTimeoutException e) {
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -151,6 +125,7 @@ public class IOIOService extends AsyncTask<Void, Void, Void> {
             }
 
             if (!socket.isConnected()) {
+//                isTaskRunning = false;
                 handler.obtainMessage(Command.MESSAGE_DISCONNECTED).sendToTarget();
             }
         }

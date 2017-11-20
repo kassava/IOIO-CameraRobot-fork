@@ -56,5 +56,4 @@ public class Command {
     public static final String LOCATION = "LOC";
     public static final String ORIENTATION = "ORIENT";
 
-
 }

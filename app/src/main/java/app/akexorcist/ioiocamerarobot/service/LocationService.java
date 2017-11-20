@@ -40,6 +40,8 @@ public class LocationService extends Service {
                         .setUseGPS(false)
                         .setUseNetwork(true)
                         .setUsePassive(true)
+                        .setTimeBetweenUpdates(30 * 60 * 1000)
+                        .setMetersBetweenUpdates(0)
         )
         {
 

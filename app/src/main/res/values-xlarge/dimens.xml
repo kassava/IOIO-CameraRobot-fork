@@ -6,8 +6,14 @@
     <dimen name="image_mode_size">250dp</dimen>  
     <dimen name="edit_text_height">90dp</dimen>     
     <dimen name="edit_text_width">475dp</dimen> 
-    <dimen name="edit_text_margin_top">50dp</dimen>   
-    
+    <dimen name="edit_text_margin_top">50dp</dimen>
+
+
+    <dimen name="height_control_button">410dp</dimen>
+    <dimen name="width_control_button">226dp</dimen>
+    <dimen name="height_settings_button">270dp</dimen>
+    <dimen name="width_settings_button">226dp</dimen>
+
     <dimen name="camera_size_button_width">350dp</dimen>     
     <dimen name="camera_size_button_height">140dp</dimen>  
     <dimen name="seekbar_width">400dp</dimen>     

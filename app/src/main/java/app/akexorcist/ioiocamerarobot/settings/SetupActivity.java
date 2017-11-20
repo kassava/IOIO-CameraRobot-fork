@@ -1,4 +1,4 @@
-package app.akexorcist.ioiocamerarobot.ioio;
+package app.akexorcist.ioiocamerarobot.settings;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -26,7 +26,6 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.github.ivbaranov.rxbluetooth.RxBluetooth;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -38,39 +37,34 @@ import org.json.JSONArray;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-
 import app.akexorcist.ioiocamerarobot.App;
 import app.akexorcist.ioiocamerarobot.R;
 import app.akexorcist.ioiocamerarobot.constant.ExtraKey;
-import app.akexorcist.ioiocamerarobot.service.BluetoothService;
 import app.akexorcist.ioiocamerarobot.service.LocationService;
 import app.akexorcist.ioiocamerarobot.service.SensorService;
 
-public class IOIOSetupActivity extends Activity implements OnClickListener, OnSeekBarChangeListener {
-    @Inject
-    RxBluetooth rxBluetooth;
+public class SetupActivity extends Activity implements OnClickListener, OnSeekBarChangeListener {
+//    @Inject
+//    RxBluetooth rxBluetooth;
+    private String TAG = SetupActivity.class.getSimpleName();
     private TextView tvImageQuality;
     private EditText etIpAddress;
     private SeekBar sbImageQuality;
     private Button btnOk;
     private Button btnPreviewSizeChooser;
     private ArrayList<String> previewSizeList;
-    private int REQUEST_ENABLE_BT = 50;
-
     private int selectedSizePosition;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         App.getAppComponent().inject(this);
         preparationApp();
-        startServices();
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         setContentView(R.layout.activity_ioio_setup);
 
         SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
         selectedSizePosition = settings.getInt(ExtraKey.PREVIEW_SIZE, 0);
-        String ipAddress = settings.getString(ExtraKey.OWN_IP_ADDRESS, "");
+        String ipAddress = settings.getString(ExtraKey.IP_ADDRESS, "192.168.1.10");
         int quality = settings.getInt(ExtraKey.QUALITY, 100);
 
         initCameraPreviewSize();
@@ -92,7 +86,11 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
 
         btnOk = findViewById(R.id.btn_ok);
         btnOk.setOnClickListener(this);
+
+
     }
+
+
 
     private void preparationApp() {
         Dexter.withActivity(this)
@@ -112,33 +110,23 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
             @Override
             public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {/* ... */}
         }).check();
-
-        if (rxBluetooth.isBluetoothAvailable()) {
-            // handle the lack of bluetooth support
-            if (!rxBluetooth.isBluetoothEnabled()) {
-                // to enable bluetooth via startActivityForResult()
-                rxBluetooth.enableBluetooth(this, REQUEST_ENABLE_BT);
-                Toast.makeText(this, "Bluetooth enable", Toast.LENGTH_LONG).show();
-            }
-        } else {
-            // check if bluetooth is currently enabled and ready for use
-            Toast.makeText(this, "Bluetooth unavailable", Toast.LENGTH_LONG).show();
-        }
     }
 
-    private void startServices(){
-        startService(new Intent(this, SensorService.class));
-        startService(new Intent(this, LocationService.class));
-        startService(new Intent(this, BluetoothService.class));
+    @Override
+    public void onStart() {
+        super.onStart();
+
     }
 
     @Override
     public void onDestroy() {
-        stopService(new Intent(this, SensorService.class));
-        stopService(new Intent(this, LocationService.class));
-        stopService(new Intent(this, BluetoothService.class));
+//        stopService(new Intent(this, SensorService.class));
+//        stopService(new Intent(this, LocationService.class));
+//        stopService(new Intent(this, BluetoothService.class));
+
         super.onDestroy();
     }
+
     @Override
     public void onClick(View v) {
         int id = v.getId();
@@ -170,11 +158,12 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
 
     @SuppressLint("StringFormatMatches")
     public void updateTextViewQuality(int quality) {
+        if(quality != -1)
         tvImageQuality.setText(getString(R.string.image_quality, quality));
     }
 
     public void saveIpAddress(String ipAddress) {
-        getPreferenceEditor().putString(ExtraKey.OWN_IP_ADDRESS, ipAddress).apply();
+        getPreferenceEditor().putString(ExtraKey.IP_ADDRESS, ipAddress).apply();
     }
 
     public void saveImageQuality(int quality) {
@@ -190,12 +179,8 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
         return settings.edit();
     }
 
-    public void goToIOIOController() {
-        Intent intent = new Intent(this, IOIOControllerActivity.class);
-        intent.putExtra(ExtraKey.IP_ADDRESS, etIpAddress.getText().toString());
-        intent.putExtra(ExtraKey.PREVIEW_SIZE, selectedSizePosition);
-        intent.putExtra(ExtraKey.QUALITY, sbImageQuality.getProgress());
-        startActivity(intent);
+    public void closeSetupActivity() {
+            finish();
     }
 
     @SuppressWarnings("deprecation")
@@ -250,7 +235,7 @@ public class IOIOSetupActivity extends Activity implements OnClickListener, OnSe
         String strIpAddress = etIpAddress.getText().toString();
         if (strIpAddress.length() != 0) {
             saveIpAddress(strIpAddress);
-            goToIOIOController();
+            closeSetupActivity();
         } else {
             showToast(getString(R.string.password_is_required));
         }

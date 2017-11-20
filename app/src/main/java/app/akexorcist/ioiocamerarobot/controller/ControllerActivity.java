@@ -74,7 +74,7 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     private Button btnPreviewSizeChooser;
     private TextView textView;
     private SeekBar sbImageQuality;
-
+    private SharedPreferences settings;
     private GoogleMap map;
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +85,9 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
 
         int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
 
-        String ipAddress = getIntent().getExtras().getString(ExtraKey.IP_ADDRESS);
+        settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
+        String ipAddress = settings.getString(ExtraKey.IP_ADDRESS, "192.168.1.10");
+
         String password = "19655";
 
         ivCameraImage = findViewById(R.id.iv_camera_image);
@@ -158,7 +160,11 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     @Override
     public void onMapReady(GoogleMap map) {
         this.map = map;
-        this.map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+        LatLng latLng = new LatLng(59.957635, 30.282826);
+        this.map.addMarker(new MarkerOptions().position(latLng).title("Marker"));
+
+        this.map.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        this.map.animateCamera(CameraUpdateFactory.zoomTo(13.0f));
     }
 
     @Override
@@ -234,8 +240,7 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
     }
 
     public SharedPreferences.Editor getPreferenceEditor() {
-        SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
-        return settings.edit();
+          return settings.edit();
     }
 
     public void updateSeletedPreviewSize() {
@@ -259,7 +264,6 @@ public class ControllerActivity extends Activity implements ConnectionManager.IO
         btnPreviewSizeChooser = view.findViewById(R.id.btn_preview_size);
         btnPreviewSizeChooser.setOnClickListener(this);
         textView = view.findViewById(R.id.tv_im_quality);
-        SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
         int quality = settings.getInt(ExtraKey.QUALITY, 100);
         textView.setText(getString(R.string.image_quality, quality));
         sbImageQuality = view.findViewById(R.id.sb_im_quality);

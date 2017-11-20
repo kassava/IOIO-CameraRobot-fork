@@ -1,9 +1,12 @@
 package app.akexorcist.ioiocamerarobot.ioio;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
@@ -20,6 +23,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.hoho.android.usbserial.driver.UsbSerialDriver;
+import com.hoho.android.usbserial.driver.UsbSerialProber;
+import com.hoho.android.usbserial.util.SerialInputOutputManager;
 import com.michaelflisar.rxbus.RXBus;
 import com.michaelflisar.rxbus.RXBusBuilder;
 
@@ -27,6 +33,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -37,20 +46,16 @@ import app.akexorcist.ioiocamerarobot.constant.DirectionState;
 import app.akexorcist.ioiocamerarobot.constant.ExtraKey;
 import app.akexorcist.ioiocamerarobot.model.Location;
 import app.akexorcist.ioiocamerarobot.model.OrientationValue;
+import app.akexorcist.ioiocamerarobot.service.LocationService;
+import app.akexorcist.ioiocamerarobot.service.SensorService;
 import app.akexorcist.ioiocamerarobot.utils.Utilities;
-import ioio.lib.api.DigitalOutput;
-import ioio.lib.api.PwmOutput;
-import ioio.lib.api.exception.ConnectionLostException;
-import ioio.lib.util.BaseIOIOLooper;
-import ioio.lib.util.IOIOLooper;
-import ioio.lib.util.android.IOIOActivity;
 import rx.Subscription;
 import rx.functions.Action1;
 
 import static android.content.ContentValues.TAG;
 
 
-public class IOIOControllerActivity extends IOIOActivity implements CameraManager.CameraManagerListener, Callback, ConnectionManager.ConnectionListener, ConnectionManager.ControllerCommandListener, ConnectionManager.SendCommandListener {
+public class IOIOControllerActivity extends Activity implements CameraManager.CameraManagerListener, Callback, ConnectionManager.ConnectionListener, ConnectionManager.ControllerCommandListener, ConnectionManager.SendCommandListener {
     @Inject
     Gson gson;
 
@@ -78,20 +83,50 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
     private CameraManager cameraManager;
     private OrientationManager orientationManager;
 
+    private SharedPreferences settings;
+    /**
+     * The device currently in use, or {@code null}.
+     */
+    private UsbSerialDriver mSerialDevice;
+
+    /**
+     * The system's USB service.
+     */
+    private UsbManager mUsbManager;
+
     private int imageQuality;
     private boolean connected = false;
+
+    private final ExecutorService mExecutor = Executors.newSingleThreadExecutor();
+
+    private SerialInputOutputManager mSerialIoManager;
+
+    private final SerialInputOutputManager.Listener mListener =
+            new SerialInputOutputManager.Listener() {
+
+                @Override
+                public void onRunError(Exception e) {
+                    Log.d(TAG, "Runner stopped.");
+                }
+
+                @Override
+                public void onNewData(final byte[] data) {
+                    Log.d(TAG, "data " + data);
+
+                }
+            };
 
     @SuppressWarnings("deprecation")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         App.getAppComponent().inject(this);
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_ioio);
-
-        String ipAddress = getIntent().getExtras().getString(ExtraKey.IP_ADDRESS);
-        int selectedPreviewSize = getIntent().getExtras().getInt(ExtraKey.PREVIEW_SIZE);
-        imageQuality = getIntent().getExtras().getInt(ExtraKey.QUALITY);
+        startServices();
+        settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
+        String ipAddress = settings.getString(ExtraKey.IP_ADDRESS, "192.168.1.10");
+        int selectedPreviewSize = settings.getInt(ExtraKey.PREVIEW_SIZE, 0);
+        imageQuality = settings.getInt(ExtraKey.QUALITY, 100);
 
         btnMoveForward = findViewById(R.id.btn_move_forward);
         btnMoveForwardLeft = findViewById(R.id.btn_move_forward_left);
@@ -127,6 +162,9 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
         orientationManager = new OrientationManager(this);
         cameraManager = new CameraManager(selectedPreviewSize);
         cameraManager.setCameraManagerListener(this);
+
+        mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+
     }
 
     public void onStop() {
@@ -135,8 +173,54 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
             subscriptionLocation.unsubscribe();
         if (subscriptionOrientation != null)
             subscriptionOrientation.unsubscribe();
-        connectionManager.stop();
+        if (connectionManager != null)
+            connectionManager.stop();
+        stopIoManager();
+        if (mSerialDevice != null) {
+            try {
+                mSerialDevice.close();
+            } catch (IOException e) {
+                // Ignore.
+            }
+            mSerialDevice = null;
+        }
         finish();
+    }
+
+    public void onUsbResume() {
+        // Find all available drivers from attached devices.
+        mSerialDevice = UsbSerialProber.acquire(mUsbManager);
+
+        Log.d(TAG, "Resumed, mSerialDevice=" + mSerialDevice);
+        if (mSerialDevice == null) {
+            Log.d(TAG, "No serial device.");
+        } else {
+            try {
+                mSerialDevice.open();
+                mSerialDevice.setBaudRate(115200);
+            } catch (IOException e) {
+                Log.e(TAG, "Error setting up device: " + e.getMessage(), e);
+                try {
+                    mSerialDevice.close();
+                } catch (IOException e2) {
+                    // Ignore.
+                }
+                mSerialDevice = null;
+                return;
+            }
+            Log.d(TAG, "Serial device: " + mSerialDevice);
+        }
+        onDeviceStateChange();
+
+    }
+
+    @Override
+    public void onResume() {
+        // unsubscribe - we used the RXSubscriptionManager for every subscription and bound all subscriptions to this class,
+        // so following will safely unsubscribe every subscription
+//        subscriptionManual.unsubscribe();
+        super.onResume();
+        onUsbResume();
     }
 
     @Override
@@ -144,6 +228,8 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
         // unsubscribe - we used the RXSubscriptionManager for every subscription and bound all subscriptions to this class,
         // so following will safely unsubscribe every subscription
 //        subscriptionManual.unsubscribe();
+        stopService(new Intent(this, SensorService.class));
+        stopService(new Intent(this, LocationService.class));
         super.onDestroy();
     }
 
@@ -184,17 +270,75 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
     @Override
     public void onMoveCommandIncoming(String command) {
         Log.d(LOG_TAG, "Incoming command: " + command);
+        byte[] dataToSend = command.getBytes();
+        if (mSerialIoManager != null) {
+            for (int i = 0; i < dataToSend.length - 1; i++) {
+                if (dataToSend[i] == 0x0A) {
+                    dataToSend[i] = 0x0B;
+                    Log.d(TAG, "Send data: " + dataToSend[i]);
 
-        RXBus.get().sendEvent(command);
+                }
+            }
+            // send the color to the serial device
+            if (mSerialDevice != null) {
+                try {
+                    Log.d(TAG, "device.write");
+                    mSerialDevice.write(dataToSend, 500);
+
+                } catch (IOException e) {
+                    Log.d(TAG, "couldn't write bytes to serial device");
+                }
+            } else {
+                Log.d(TAG, "device = null");
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopIoManager();
+        if (mSerialDevice != null) {
+            try {
+                mSerialDevice.close();
+            } catch (IOException e) {
+                // Ignore.
+            }
+            mSerialDevice = null;
+        }
+    }
+
+
+    private void stopIoManager() {
+        if (mSerialIoManager != null) {
+            Log.i(TAG, "Stopping io manager ..");
+            mSerialIoManager.stop();
+            mSerialIoManager = null;
+        }
+    }
+
+    private void startIoManager() {
+        if (mSerialDevice != null) {
+            Log.i(TAG, "Starting io manager ..");
+            mSerialIoManager = new SerialInputOutputManager(mSerialDevice, mListener);
+            mExecutor.submit(mSerialIoManager);
+            Toast.makeText(this, "startIoManager", Toast.LENGTH_SHORT).show();
+
+        }
+    }
+
+    private void onDeviceStateChange() {
+        stopIoManager();
+        startIoManager();
     }
 
     public void onQualityRequest() {
-        SharedPreferences settings = getSharedPreferences(ExtraKey.SETUP_PREFERENCE, Context.MODE_PRIVATE);
         String previewSizesList = settings.getString(ExtraKey.PREVIEW_SIZE_SET, "");
         previewSizesList = Command.QUALITY_LIST + previewSizesList;
         Log.d(LOG_TAG, "onQualityRequest: " + previewSizesList);
         connectionManager.sendPreviewSizes(previewSizesList);
     }
+
 
     @Override
     public void onControllerConnected() {
@@ -216,8 +360,20 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
                         connectionManager.sendCommand(Command.LOCATION + gson.toJson(s));
                     }
                 });
+        subscriptionOrientation = RXBusBuilder.create(String.class)
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String s) {
+//                        Log.d(TAG, "orientation" + s.getValue().toString() + " " + gson.toJson(s));
+                        onMoveCommandIncoming(s);
+                    }
+                });
     }
 
+    private void startServices() {
+        startService(new Intent(this, SensorService.class));
+        startService(new Intent(this, LocationService.class));
+    }
     @Override
     public void onWrongPassword() {
         connectionManager.sendCommand(Command.WRONG_PASSWORD);
@@ -457,175 +613,5 @@ public class IOIOControllerActivity extends IOIOActivity implements CameraManage
 
     public void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
-    }
-
-    class Looper extends BaseIOIOLooper {
-        DigitalOutput D1A, D1B, D2A, D2B, D3A, D3B, D4A, D4B;
-        PwmOutput PWM1, PWM2, PWM3, PWM4;
-
-        protected void setup() throws ConnectionLostException {
-            ioio_.openDigitalOutput(0, false);
-            D1A = ioio_.openDigitalOutput(1, false);
-            D1B = ioio_.openDigitalOutput(2, false);
-            D2A = ioio_.openDigitalOutput(4, false);
-            D2B = ioio_.openDigitalOutput(5, false);
-            D3A = ioio_.openDigitalOutput(16, false);
-            D3B = ioio_.openDigitalOutput(17, false);
-            D4A = ioio_.openDigitalOutput(18, false);
-            D4B = ioio_.openDigitalOutput(19, false);
-            PWM1 = ioio_.openPwmOutput(3, 100);
-            PWM1.setDutyCycle(0);
-            PWM2 = ioio_.openPwmOutput(6, 100);
-            PWM2.setDutyCycle(0);
-            PWM3 = ioio_.openPwmOutput(13, 100);
-            PWM3.setDutyCycle(0);
-            PWM4 = ioio_.openPwmOutput(14, 100);
-            PWM4.setDutyCycle(0);
-
-            showToastFromIOIO(getString(R.string.connected));
-        }
-
-        public void loop() throws ConnectionLostException, InterruptedException {
-            if (directionState == DirectionState.UP) {
-                PWM1.setDutyCycle((float) movementSpeed / 100);
-                PWM2.setDutyCycle((float) movementSpeed / 100);
-                PWM3.setDutyCycle((float) movementSpeed / 100);
-                PWM4.setDutyCycle((float) movementSpeed / 100);
-                D1A.write(true);
-                D1B.write(false);
-                D2A.write(true);
-                D2B.write(false);
-                D3A.write(true);
-                D3B.write(false);
-                D4A.write(true);
-                D4B.write(false);
-            } else if (directionState == DirectionState.DOWN) {
-                PWM1.setDutyCycle((float) movementSpeed / 100);
-                PWM2.setDutyCycle((float) movementSpeed / 100);
-                PWM3.setDutyCycle((float) movementSpeed / 100);
-                PWM4.setDutyCycle((float) movementSpeed / 100);
-                D1A.write(false);
-                D1B.write(true);
-                D2A.write(false);
-                D2B.write(true);
-                D3A.write(false);
-                D3B.write(true);
-                D4A.write(false);
-                D4B.write(true);
-            } else if (directionState == DirectionState.LEFT) {
-                PWM1.setDutyCycle((float) movementSpeed / 100);
-                PWM2.setDutyCycle((float) movementSpeed / 100);
-                PWM3.setDutyCycle((float) movementSpeed / 100);
-                PWM4.setDutyCycle((float) movementSpeed / 100);
-                D1A.write(false);
-                D1B.write(true);
-                D2A.write(false);
-                D2B.write(true);
-                D3A.write(true);
-                D3B.write(false);
-                D4A.write(true);
-                D4B.write(false);
-            } else if (directionState == DirectionState.RIGHT) {
-                PWM1.setDutyCycle((float) movementSpeed / 100);
-                PWM2.setDutyCycle((float) movementSpeed / 100);
-                PWM3.setDutyCycle((float) movementSpeed / 100);
-                PWM4.setDutyCycle((float) movementSpeed / 100);
-                D1A.write(true);
-                D1B.write(false);
-                D2A.write(true);
-                D2B.write(false);
-                D3A.write(false);
-                D3B.write(true);
-                D4A.write(false);
-                D4B.write(true);
-            } else if (directionState == DirectionState.UPRIGHT) {
-                PWM1.setDutyCycle((((float) movementSpeed / (float) 1.5) + 20) / 100);
-                PWM2.setDutyCycle((((float) movementSpeed / (float) 1.5) + 20) / 100);
-                PWM3.setDutyCycle((((float) movementSpeed / (float) 1.5) - 20) / 100);
-                PWM4.setDutyCycle((((float) movementSpeed / (float) 1.5) - 20) / 100);
-                D1A.write(true);
-                D1B.write(false);
-                D2A.write(true);
-                D2B.write(false);
-                D3A.write(true);
-                D3B.write(false);
-                D4A.write(true);
-                D4B.write(false);
-            } else if (directionState == DirectionState.UPLEFT) {
-                PWM1.setDutyCycle((((float) movementSpeed / (float) 1.5) - 20) / 100);
-                PWM2.setDutyCycle((((float) movementSpeed / (float) 1.5) - 20) / 100);
-                PWM3.setDutyCycle((((float) movementSpeed / (float) 1.5) + 20) / 100);
-                PWM4.setDutyCycle((((float) movementSpeed / (float) 1.5) + 20) / 100);
-                D1A.write(true);
-                D1B.write(false);
-                D2A.write(true);
-                D2B.write(false);
-                D3A.write(true);
-                D3B.write(false);
-                D4A.write(true);
-                D4B.write(false);
-            } else if (directionState == DirectionState.DOWNRIGHT) {
-                PWM1.setDutyCycle((((float) movementSpeed / (float) 1.5) + 20) / 100);
-                PWM2.setDutyCycle((((float) movementSpeed / (float) 1.5) + 20) / 100);
-                PWM3.setDutyCycle((((float) movementSpeed / (float) 1.5) - 20) / 100);
-                PWM4.setDutyCycle((((float) movementSpeed / (float) 1.5) - 20) / 100);
-                D1A.write(false);
-                D1B.write(true);
-                D2A.write(false);
-                D2B.write(true);
-                D3A.write(false);
-                D3B.write(true);
-                D4A.write(false);
-                D4B.write(true);
-            } else if (directionState == DirectionState.DOWNLEFT) {
-                PWM1.setDutyCycle((((float) movementSpeed / (float) 1.5) - 20) / 100);
-                PWM2.setDutyCycle((((float) movementSpeed / (float) 1.5) - 20) / 100);
-                PWM3.setDutyCycle((((float) movementSpeed / (float) 1.5) + 20) / 100);
-                PWM4.setDutyCycle((((float) movementSpeed / (float) 1.5) + 20) / 100);
-                D1A.write(false);
-                D1B.write(true);
-                D2A.write(false);
-                D2B.write(true);
-                D3A.write(false);
-                D3B.write(true);
-                D4A.write(false);
-                D4B.write(true);
-            } else if (directionState == DirectionState.STOP) {
-                PWM1.setDutyCycle(0);
-                PWM2.setDutyCycle(0);
-                PWM3.setDutyCycle(0);
-                PWM4.setDutyCycle(0);
-                D1A.write(false);
-                D1B.write(false);
-                D2A.write(false);
-                D2B.write(false);
-                D3A.write(false);
-                D3B.write(false);
-                D4A.write(false);
-                D4B.write(false);
-            }
-
-            Thread.sleep(20);
-        }
-
-        public void disconnected() {
-            showToastFromIOIO(getString(R.string.disconnected));
-        }
-
-        public void incompatible() {
-            showToastFromIOIO(getString(R.string.incompatible_firmware));
-        }
-
-        public void showToastFromIOIO(final String mesage) {
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    showToast(mesage);
-                }
-            });
-        }
-    }
-
-    protected IOIOLooper createIOIOLooper() {
-        return new Looper();
     }
 }

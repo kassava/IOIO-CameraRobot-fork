@@ -17,8 +17,9 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import java.util.List;
 
 import app.akexorcist.ioiocamerarobot.R;
-import app.akexorcist.ioiocamerarobot.controller.ControllerSetupActivity;
-import app.akexorcist.ioiocamerarobot.ioio.IOIOSetupActivity;
+import app.akexorcist.ioiocamerarobot.controller.ControllerActivity;
+import app.akexorcist.ioiocamerarobot.ioio.IOIOControllerActivity;
+import app.akexorcist.ioiocamerarobot.settings.SetupActivity;
 
 public class MenuActivity extends Activity {
 
@@ -30,7 +31,7 @@ public class MenuActivity extends Activity {
         Button btnController = findViewById(R.id.btn_controller);
         btnController.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                Intent intent = new Intent(MenuActivity.this, ControllerSetupActivity.class);
+                Intent intent = new Intent(MenuActivity.this, ControllerActivity.class);
                 startActivity(intent);
             }
         });
@@ -38,7 +39,15 @@ public class MenuActivity extends Activity {
         Button btnIoio = findViewById(R.id.btn_ioio);
         btnIoio.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                Intent intent = new Intent(MenuActivity.this, IOIOSetupActivity.class);
+                Intent intent = new Intent(MenuActivity.this, IOIOControllerActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        Button btnSettings = findViewById(R.id.btn_settings);
+        btnSettings.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(MenuActivity.this, SetupActivity.class);
                 startActivity(intent);
             }
         });

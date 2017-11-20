@@ -1,37 +1,25 @@
 package app.akexorcist.ioiocamerarobot.service;
 
 import android.app.Service;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.github.ivbaranov.rxbluetooth.BluetoothConnection;
-import com.github.ivbaranov.rxbluetooth.RxBluetooth;
-import com.github.ivbaranov.rxbluetooth.events.ConnectionStateEvent;
-import com.michaelflisar.rxbus.RXBusBuilder;
-
-import java.io.IOException;
-
-import javax.inject.Inject;
+import java.util.List;
 
 import app.akexorcist.ioiocamerarobot.constant.AppConstants;
+import io.palaima.smoothbluetooth.Device;
+import io.palaima.smoothbluetooth.SmoothBluetooth;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
 import rx.Subscription;
-import rx.functions.Action1;
 
-public class BluetoothService extends Service {
-    @Inject
-    RxBluetooth rxBluetooth;
+public class BluetoothService extends Service implements SmoothBluetooth.Listener {
+    private SmoothBluetooth mSmoothBluetooth;
+    public static final int ENABLE_BT__REQUEST = 1;
+
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
     private String TAG = BluetoothService.class.getSimpleName();
-    private BluetoothSocket btSocket = null;
-    private BluetoothConnection bluetoothConnection = null;
     private Subscription subscriptionCommandToArduino;
 
     @Override
@@ -43,131 +31,107 @@ public class BluetoothService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "BluetoothService started!");
-        rxBluetooth = new RxBluetooth(this);
-        onEventRxBus();
-        if (!rxBluetooth.isBluetoothAvailable()) {
-            // handle the lack of bluetooth support
-            Log.d(TAG, "Bluetooth is not supported!");
-            Toast.makeText(this, "Bluetooth is not supported!", Toast.LENGTH_LONG).show();
-        } else {
-            // check if bluetooth is currently enabled and ready for use
-            if (!rxBluetooth.isBluetoothEnabled()) {
-                Log.d(TAG, "Bluetooth should be enabled first!");
-                Toast.makeText(this, "Bluetooth should be enabled first!", Toast.LENGTH_LONG).show();
-            } else {
-                onConnectDevice();
-            }
-        }
+        mSmoothBluetooth = new SmoothBluetooth(this, SmoothBluetooth.ConnectionTo.OTHER_DEVICE, SmoothBluetooth.Connection.SECURE, this);
+//        mSmoothBluetooth.doDiscovery();
+        mSmoothBluetooth.tryConnection();
         return START_STICKY;
     }
 
-    private void onConnectDevice(){
-        compositeDisposable.add(rxBluetooth.observeDevices()
-                .observeOn(Schedulers.computation())
-                .subscribeOn(Schedulers.computation())
-                .subscribe(new Consumer<BluetoothDevice>() {
-                    @Override
-                    public void accept(BluetoothDevice bluetoothDevice) throws IOException {
-                        Log.d(TAG, "Device found: " + bluetoothDevice.getAddress()
-                                + " - " + bluetoothDevice.getName());
-                        if (AppConstants.ADDRESS_BT.equals(bluetoothDevice.getAddress())) {
-                            rxBluetooth.observeConnectDevice(bluetoothDevice, AppConstants.MY_UUID)
-                                    .subscribe(new Consumer<BluetoothSocket>() {
-                                        @Override
-                                        public void accept(BluetoothSocket socket) throws Exception {
-                                            // Connected to the device, do anything with the socket
-                                            Log.d(TAG, "Device connected ");
-//                                            Toast.makeText(BluetoothService.this, "Device connected!", Toast.LENGTH_LONG).show();
-                                            bluetoothConnection = new BluetoothConnection(socket);
-//                                            onConnectionStateSubscriber();
-                                        }
-                                    }, new Consumer<Throwable>() {
-                                        @Override
-                                        public void accept(Throwable throwable) throws Exception {
-                                            // Error occured
-                                            Log.d(TAG, "Bluetooth throwable: " + throwable);
-                                        }
-                                    });
-                        }
-                    }
-                }));
-        rxBluetooth.startDiscovery();
-    }
-
-    private void onConnectionStateSubscriber(){
-        rxBluetooth.observeConnectionState()
-                .observeOn(Schedulers.computation())
-                .subscribeOn(Schedulers.computation())
-                .subscribe(new Consumer<ConnectionStateEvent>() {
-                    @Override public void accept(ConnectionStateEvent event) throws Exception {
-                        switch (event.getState()) {
-                            case BluetoothAdapter.STATE_DISCONNECTED:
-                                // device disconnected
-                                Log.d(TAG, "Bluetooth tSTATE_DISCONNECTED!");
-//                                onConnectDevice();
-                                break;
-                            case BluetoothAdapter.STATE_CONNECTING:
-                                // device connecting
-                                Log.d(TAG, "Bluetooth STATE_CONNECTING!");
-                                break;
-                            case BluetoothAdapter.STATE_CONNECTED:
-                                // device connected
-                                Log.d(TAG, "Bluetooth STATE_CONNECTED!");
-//                                onReadMessageFromArduino();
-                                break;
-                            case BluetoothAdapter.STATE_DISCONNECTING:
-                                // device disconnecting
-                                Log.d(TAG, "Bluetooth STATE_DISCONNECTING!");
-//                                onConnectDevice();
-                                break;
-                        }
-                    }
-                });
-    }
-
     private void onEventRxBus() {
-        subscriptionCommandToArduino = RXBusBuilder.create(String.class)
-                .subscribe(new Action1<String>() {
-                    @Override
-                    public void call(String s) {
-                        Log.d(TAG, "bluetoothConnection: " + bluetoothConnection);
-                        if (bluetoothConnection != null) {
-                            Log.d(TAG, "bluetoothConnection send: " + s);
-                            bluetoothConnection.send(s);
-                        }
-                    }
-                });
+//        subscriptionCommandToArduino = RXBusBuilder.create(String.class)
+//                .subscribe(new Action1<String>() {
+//                    @Override
+//                    public void call(String s) {
+//                        Log.d(TAG, "bluetoothConnection: " + mSmoothBluetooth.isConnected());
+//                        if (mSmoothBluetooth.isConnected()) {
+//                            Log.d(TAG, "bluetoothConnection send: " + s);
+//                            mSmoothBluetooth.send(s);
+//                        }
+//                    }
+//                });
     }
 
-    private void onReadMessageFromArduino() {
-        // Or just observe string
-        if (bluetoothConnection != null)
-            bluetoothConnection.observeStringStream()
-                    .observeOn(Schedulers.computation())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(new Consumer<String>() {
-                        @Override
-                        public void accept(String s) throws Exception {
-                            Log.d(TAG, "onReadMessageFromArduino: " + s);
-                        }
-
-                    }, new Consumer<Throwable>() {
-                        @Override
-                        public void accept(Throwable throwable) throws Exception {
-                            Log.d(TAG, "onReadMessageFromArduino + throwable: " + throwable);
-
-                        }
-                    });
-    }
 
     @Override
     public void onDestroy() {
-        if (rxBluetooth != null) {
-            rxBluetooth.cancelDiscovery();
-        }
+        if (mSmoothBluetooth != null)
+            mSmoothBluetooth.stop();
         if (subscriptionCommandToArduino != null)
             subscriptionCommandToArduino.unsubscribe();
         compositeDisposable.clear();
         super.onDestroy();
+    }
+
+    @Override
+    public void onBluetoothNotSupported() {
+        Log.d(TAG, "onBluetoothNotSupported ");
+    }
+
+    @Override
+    public void onBluetoothNotEnabled() {
+//        Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//        startActivityForResult(enableBluetooth, ENABLE_BT__REQUEST);
+        Log.d(TAG, "onBluetoothNotEnabled ");
+    }
+
+    @Override
+    public void onConnecting(Device device) {
+        Toast.makeText(this, "onConnecting" + device.getAddress(), Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "onConnecting " + device);
+
+    }
+
+    @Override
+    public void onConnected(Device device) {
+        Toast.makeText(this, "onConnected" + device.getAddress(), Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "onConnected " + device);
+        onEventRxBus();
+
+    }
+
+    @Override
+    public void onDisconnected() {
+        Log.d(TAG, "onDisconnected ");
+
+    }
+
+    @Override
+    public void onConnectionFailed(Device device) {
+        Toast.makeText(this, "onConnectionFailed" + device.getAddress(), Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "onConnectionFailed " + device);
+        if (device.isPaired()) {
+            mSmoothBluetooth.doDiscovery();
+        }
+
+    }
+
+    @Override
+    public void onDiscoveryStarted() {
+        Log.d(TAG, "onDiscoveryStarted ");
+
+    }
+
+    @Override
+    public void onDiscoveryFinished() {
+        Log.d(TAG, "onDiscoveryFinished ");
+
+    }
+
+    @Override
+    public void onNoDevicesFound() {
+        Log.d(TAG, "onNoDevicesFound ");
+
+    }
+
+    @Override
+    public void onDevicesFound(final List<Device> deviceList, final SmoothBluetooth.ConnectionCallback connectionCallback) {
+        Log.d(TAG, "onDevicesFound  " + deviceList.get(0).getAddress() + deviceList.get(0).isPaired());
+        Device device = new Device(AppConstants.NAME, AppConstants.ADDRESS_BT, true);
+        connectionCallback.connectTo(device);
+    }
+
+    @Override
+    public void onDataReceived(int data) {
+        Log.d(TAG, "onDataReceived " + data);
     }
 }
